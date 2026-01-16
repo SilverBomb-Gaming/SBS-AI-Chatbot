@@ -17,15 +17,24 @@ def _serialize_rules(rules: Iterable[Dict[str, object]]) -> str:
     return json.dumps(payload, separators=(",", ":"))
 
 
-def ensure_brain_initialized(database_url: str, default_rules: Iterable[Dict[str, object]]) -> None:
+def ensure_brain_initialized(
+    database_url: str, default_rules: Iterable[Dict[str, object]]
+) -> None:
     """Insert the baseline brain when none exists."""
 
     conn = persistence.get_connection(database_url)
-    existing = conn.execute("SELECT id FROM brain_versions ORDER BY id LIMIT 1").fetchone()
+    existing = conn.execute(
+        "SELECT id FROM brain_versions ORDER BY id LIMIT 1"
+    ).fetchone()
     if existing:
-        active = conn.execute("SELECT active_version_id FROM brain_active WHERE id = 1").fetchone()
+        active = conn.execute(
+            "SELECT active_version_id FROM brain_active WHERE id = 1"
+        ).fetchone()
         if not active:
-            conn.execute("INSERT OR REPLACE INTO brain_active (id, active_version_id) VALUES (1, ?)", (existing["id"],))
+            conn.execute(
+                "INSERT OR REPLACE INTO brain_active (id, active_version_id) VALUES (1, ?)",
+                (existing["id"],),
+            )
             conn.commit()
         return
 
@@ -43,10 +52,22 @@ def ensure_brain_initialized(database_url: str, default_rules: Iterable[Dict[str
             eval_report
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (_now_iso(), "system", None, "approved", "Initial brain", blob, 1.0, "Baseline"),
+        (
+            _now_iso(),
+            "system",
+            None,
+            "approved",
+            "Initial brain",
+            blob,
+            1.0,
+            "Baseline",
+        ),
     )
     version_id = cursor.lastrowid
-    conn.execute("INSERT OR REPLACE INTO brain_active (id, active_version_id) VALUES (1, ?)", (version_id,))
+    conn.execute(
+        "INSERT OR REPLACE INTO brain_active (id, active_version_id) VALUES (1, ?)",
+        (version_id,),
+    )
     conn.commit()
 
 
@@ -90,6 +111,9 @@ def rollback_to_version(database_url: str, version_id: int) -> Dict[str, object]
     if version.get("status") != "approved":
         raise ValueError("Only approved versions can be activated")
     conn = persistence.get_connection(database_url)
-    conn.execute("INSERT OR REPLACE INTO brain_active (id, active_version_id) VALUES (1, ?)", (version_id,))
+    conn.execute(
+        "INSERT OR REPLACE INTO brain_active (id, active_version_id) VALUES (1, ?)",
+        (version_id,),
+    )
     conn.commit()
     return version

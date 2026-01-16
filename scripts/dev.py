@@ -23,7 +23,9 @@ def run_command(command: list[str]) -> int:
 
 
 def cmd_install(_: argparse.Namespace) -> int:
-    return run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+    return run_command(
+        [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]
+    )
 
 
 def cmd_run(_: argparse.Namespace) -> int:

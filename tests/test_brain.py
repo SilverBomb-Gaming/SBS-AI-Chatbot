@@ -29,7 +29,16 @@ def _insert_version(database_url, template_blob: str, status: str = "approved") 
             eval_report
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        ("2026-01-15T00:00:00Z", "tester", 1, status, "test", json.dumps(payload), 0.9, "manual"),
+        (
+            "2026-01-15T00:00:00Z",
+            "tester",
+            1,
+            status,
+            "test",
+            json.dumps(payload),
+            0.9,
+            "manual",
+        ),
     )
     conn.commit()
     return cursor.lastrowid
@@ -55,7 +64,9 @@ def test_rollback_endpoint_switches_active_version(monkeypatch, tmp_path):
     new_version_id = _insert_version(db_url, active["brain_blob"], status="approved")
 
     client = app.test_client()
-    response = client.post(f"/admin/brain/rollback/{new_version_id}", headers={"X-API-Key": "alpha-admin"})
+    response = client.post(
+        f"/admin/brain/rollback/{new_version_id}", headers={"X-API-Key": "alpha-admin"}
+    )
     assert response.status_code == 200
     data = response.get_json()
     assert data["active_version_id"] == new_version_id
@@ -70,9 +81,13 @@ def test_rollback_rejects_invalid_version(monkeypatch, tmp_path):
     pending_version = _insert_version(db_url, active["brain_blob"], status="proposed")
 
     client = app.test_client()
-    missing = client.post("/admin/brain/rollback/9999", headers={"X-API-Key": "alpha-admin"})
+    missing = client.post(
+        "/admin/brain/rollback/9999", headers={"X-API-Key": "alpha-admin"}
+    )
     assert missing.status_code == 400
 
-    rejected = client.post(f"/admin/brain/rollback/{pending_version}", headers={"X-API-Key": "alpha-admin"})
+    rejected = client.post(
+        f"/admin/brain/rollback/{pending_version}", headers={"X-API-Key": "alpha-admin"}
+    )
     assert rejected.status_code == 400
     assert "approved" in rejected.get_json()["error"].lower()

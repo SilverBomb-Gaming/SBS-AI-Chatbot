@@ -18,7 +18,9 @@ class InMemoryAuditLog:
         self._entries: List[AuditEntry] = []
 
     def record(self, event: str, actor: str = "system") -> None:
-        self._entries.append(AuditEntry(event=event, actor=actor, created_at=datetime.now(timezone.utc)))
+        self._entries.append(
+            AuditEntry(event=event, actor=actor, created_at=datetime.now(timezone.utc))
+        )
 
     def latest(self, limit: int = 20) -> List[AuditEntry]:
         return self._entries[-limit:]

@@ -88,9 +88,13 @@ def _parse_api_keys(raw_value: str | None) -> List[str]:
                 if value:
                     keys.append(value)
         else:
-            LOGGER.warning("X_API_KEYS JSON payload must be a list; got %s", type(parsed).__name__)
+            LOGGER.warning(
+                "X_API_KEYS JSON payload must be a list; got %s", type(parsed).__name__
+            )
     else:
-        keys = [piece for piece in (part.strip() for part in candidate.split(",")) if piece]
+        keys = [
+            piece for piece in (part.strip() for part in candidate.split(",")) if piece
+        ]
     # Remove duplicates while preserving order
     deduped: List[str] = []
     seen = set()
@@ -110,7 +114,9 @@ def _sanitize_tier(raw_value: str | None) -> str:
     if value in VALID_APP_TIERS:
         return value
     if value:
-        LOGGER.warning("Invalid APP_TIER '%s'; falling back to '%s'", value, DEFAULT_APP_TIER)
+        LOGGER.warning(
+            "Invalid APP_TIER '%s'; falling back to '%s'", value, DEFAULT_APP_TIER
+        )
     return DEFAULT_APP_TIER
 
 
@@ -142,8 +148,12 @@ def load_config() -> Config:
     return Config(
         secret_key=os.getenv("SECRET_KEY", DEFAULT_SECRET),
         app_tier=app_tier,
-        request_size_limit=_int_from_env("REQUEST_MAX_BYTES", Config.request_size_limit),
-        rate_limit_requests=_int_from_env("RATE_LIMIT_REQUESTS", Config.rate_limit_requests),
+        request_size_limit=_int_from_env(
+            "REQUEST_MAX_BYTES", Config.request_size_limit
+        ),
+        rate_limit_requests=_int_from_env(
+            "RATE_LIMIT_REQUESTS", Config.rate_limit_requests
+        ),
         rate_limit_window=_int_from_env("RATE_LIMIT_WINDOW", Config.rate_limit_window),
         api_keys=api_keys,
         database_url=os.getenv("DATABASE_URL", _DEFAULT_DATABASE_URL),

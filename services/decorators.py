@@ -102,7 +102,9 @@ def json_endpoint(func: Callable[..., JsonResult]) -> Callable[..., Any]:
         except ValueError as exc:  # validation error
             return jsonify({"error": str(exc)}), 400
         except Exception as exc:  # pragma: no cover - log unexpected errors
-            current_app.logger.exception("Unhandled error in JSON endpoint", exc_info=exc)
+            current_app.logger.exception(
+                "Unhandled error in JSON endpoint", exc_info=exc
+            )
             return jsonify({"error": "Internal server error"}), 500
 
         if isinstance(result, tuple):
@@ -119,7 +121,9 @@ def json_endpoint(func: Callable[..., JsonResult]) -> Callable[..., Any]:
     return wrapper
 
 
-def rate_limit(limit: int, window_seconds: int, identifier: Optional[Callable[[], str]] = None):
+def rate_limit(
+    limit: int, window_seconds: int, identifier: Optional[Callable[[], str]] = None
+):
     """Simple decorator that enforces an in-memory request quota."""
 
     def decorator(func: Callable[..., JsonResult]):
@@ -127,9 +131,15 @@ def rate_limit(limit: int, window_seconds: int, identifier: Optional[Callable[[]
         def wrapper(*args: Any, **kwargs: Any):
             ident = identifier() if callable(identifier) else None
             if not ident:
-                ident = request.headers.get("X-API-Key") or request.remote_addr or "anonymous"
+                ident = (
+                    request.headers.get("X-API-Key")
+                    or request.remote_addr
+                    or "anonymous"
+                )
 
-            allowed = _rate_limiter.check_allow(ident, limit=limit, window_seconds=window_seconds)
+            allowed = _rate_limiter.check_allow(
+                ident, limit=limit, window_seconds=window_seconds
+            )
             if not allowed:
                 return jsonify({"error": "Too many requests"}), 429
             return func(*args, **kwargs)

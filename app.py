@@ -4,7 +4,12 @@ from __future__ import annotations
 from flask import Flask
 
 from config import load_config
-from core.triage import DEFAULT_RULES, configure_rule_provider, deserialize_rules, serialize_rules
+from core.triage import (
+    DEFAULT_RULES,
+    configure_rule_provider,
+    deserialize_rules,
+    serialize_rules,
+)
 from services import brain, persistence
 from web.routes import bp as main_blueprint
 
@@ -26,7 +31,7 @@ def create_app() -> Flask:
     app.config["X_API_KEYS"] = set(config.api_keys)
     persistence.init_storage(config.database_url)
     brain.ensure_brain_initialized(config.database_url, serialize_rules(DEFAULT_RULES))
-    
+
     def _brain_rule_loader():
         payload = brain.load_active_rules(config.database_url)
         if not payload:

@@ -19,6 +19,8 @@ class LLMProvider:
 class NullProvider(LLMProvider):
     def generate(self, ticket_payload: Dict[str, object]) -> LLMResponse:
         return LLMResponse(
-            improved_reply=ticket_payload.get("suggested_reply", "Thanks for your patience."),
+            improved_reply=ticket_payload.get(
+                "suggested_reply", "Thanks for your patience."
+            ),
             next_steps="LLM assist disabled.",
         )

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-from flask import Blueprint, current_app, g, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, g, render_template, request
 
 from core.triage import analyze_ticket
 from services import brain
@@ -35,7 +35,9 @@ def _before_request():
 
 @bp.get("/")
 def index():
-    return render_template("index.html", tier=current_app.config.get("APP_TIER", "public"))
+    return render_template(
+        "index.html", tier=current_app.config.get("APP_TIER", "public")
+    )
 
 
 @bp.get("/tickets")

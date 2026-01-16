@@ -51,7 +51,9 @@ def test_json_vs_html_behavior(gated_app):
     assert html_response.status_code == 404
     assert not html_response.is_json
 
-    json_response = client.get("/api/feature-demo", headers={"Accept": "application/json"})
+    json_response = client.get(
+        "/api/feature-demo", headers={"Accept": "application/json"}
+    )
     assert json_response.status_code == 404
     assert json_response.is_json
     assert json_response.get_json()["error"] in {"Resource not found", "Forbidden"}

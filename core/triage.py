@@ -108,7 +108,9 @@ def _provided_rules() -> List[KeywordRule]:
     return list(DEFAULT_RULES)
 
 
-def analyze_ticket(title: str, description: str, rules: Iterable[KeywordRule] | None = None) -> TriageResult:
+def analyze_ticket(
+    title: str, description: str, rules: Iterable[KeywordRule] | None = None
+) -> TriageResult:
     """Return a deterministic triage result from textual input."""
     if not title and not description:
         return TriageResult(category="general", priority="low", confidence=0.2)
@@ -120,7 +122,11 @@ def analyze_ticket(title: str, description: str, rules: Iterable[KeywordRule] | 
     if scores:
         category = max(scores, key=scores.get)
         total_score = scores[category]
-        matched_rules = [rule for rule in active_rules if rule.category == category and rule.keyword in combined.lower()]
+        matched_rules = [
+            rule
+            for rule in active_rules
+            if rule.category == category and rule.keyword in combined.lower()
+        ]
         matched_keywords = sorted({rule.keyword for rule in matched_rules})
         suggested_action = matched_rules[0].suggested_action
         suggested_reply = matched_rules[0].suggested_reply
@@ -166,7 +172,9 @@ def deserialize_rules(payload: Iterable[Dict[str, object]]) -> List[KeywordRule]
                 weight=int(entry.get("weight", 1)),
                 category=str(entry.get("category", "general")),
                 suggested_action=str(entry.get("suggested_action", "Review ticket")),
-                suggested_reply=str(entry.get("suggested_reply", "Thanks for contacting support.")),
+                suggested_reply=str(
+                    entry.get("suggested_reply", "Thanks for contacting support.")
+                ),
             )
         )
     return result
