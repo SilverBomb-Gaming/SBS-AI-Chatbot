@@ -29,6 +29,7 @@ FEATURE_MATRIX: Dict[str, Dict[str, bool]] = {
         "FEATURE_WEBHOOKS": False,
         "FEATURE_RULES_EDITOR": False,
         "FEATURE_LLM_ASSIST": False,
+        "FEATURE_EPISODES": False,
     },
     "paid": {
         "FEATURE_RATE_LIMIT": True,
@@ -40,6 +41,7 @@ FEATURE_MATRIX: Dict[str, Dict[str, bool]] = {
         "FEATURE_WEBHOOKS": False,
         "FEATURE_RULES_EDITOR": False,
         "FEATURE_LLM_ASSIST": False,
+        "FEATURE_EPISODES": True,
     },
     "ultimate": {
         "FEATURE_RATE_LIMIT": True,
@@ -51,6 +53,7 @@ FEATURE_MATRIX: Dict[str, Dict[str, bool]] = {
         "FEATURE_WEBHOOKS": True,
         "FEATURE_RULES_EDITOR": True,
         "FEATURE_LLM_ASSIST": False,
+        "FEATURE_EPISODES": True,
     },
 }
 

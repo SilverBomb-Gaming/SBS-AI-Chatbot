@@ -19,6 +19,7 @@ def test_default_tier_is_public():
     config = load_config()
     assert config.app_tier == DEFAULT_APP_TIER == "public"
     assert config.features == FEATURE_MATRIX["public"]
+    assert not config.features["FEATURE_EPISODES"]
 
 
 def test_invalid_tier_falls_back(monkeypatch):
@@ -32,6 +33,7 @@ def test_paid_tier_features(monkeypatch):
     monkeypatch.setenv("APP_TIER", "paid")
     config = load_config()
     assert config.features == FEATURE_MATRIX["paid"]
+    assert config.features["FEATURE_EPISODES"]
 
 
 def test_ultimate_tier_enables_llm_when_key_present(monkeypatch):
@@ -41,3 +43,4 @@ def test_ultimate_tier_enables_llm_when_key_present(monkeypatch):
     expected = copy.deepcopy(FEATURE_MATRIX["ultimate"])
     expected["FEATURE_LLM_ASSIST"] = True
     assert config.features == expected
+    assert config.features["FEATURE_EPISODES"]
