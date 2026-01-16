@@ -17,12 +17,13 @@ The SBS AI Environment (AI-E) is a governed execution space for support-triage e
 - Tier config + feature flag matrix
 - `@require_feature` + `feature_enabled` fail-closed gating
 - API key parsing + `@require_api_key` decorator (ready for Paid/Ultimate routes)
+- Episodes ingestion + listing endpoints (Paid/Ultimate, metadata-only)
 - Tests + CI for everything above
 
 **🚧 Planned next**
 - Paid tier: ticket persistence, exports, richer rate limiting
 - Ultimate tier: RBAC, deeper audit, webhooks, rules editor, LLM assist toggle
-- AI Eyes: episode ingestion + Unity/runner integrations
+- AI Eyes Phase C: Unity “AI eyes” runner + automated QA playback
 
 ## Quickstart
 
@@ -42,7 +43,7 @@ Visit http://127.0.0.1:8000 for the UI, or POST to `/api/triage` for JSON output
 # Public demo (default)
 APP_TIER=public
 
-# Paid staging (enables auth + persistence flags)
+# Paid staging (enables auth + persistence flags + episode intake)
 APP_TIER=paid
 X_API_KEYS=alpha-paid,beta-paid
 
@@ -55,16 +56,36 @@ OPENAI_API_KEY= # optional, only flips FEATURE_LLM_ASSIST when set
 > Never commit real API keys. Keep them in your private `.env` and share through your organization’s secret manager.
 
 ### Curl example (future Paid endpoints)
+### Episodes API (Paid/Ultimate)
 
-A future Paid-only endpoint (e.g., `/api/export`) will combine `@require_feature("FEATURE_AUTH")` with `@require_api_key`. When that lands, calls will look like:
+Episodes capture QA or playtest runs as metadata (no binaries) so Unity “AI eyes” can report outcomes safely. Required fields: `source`, `mode` (`freestyle|instructed|breaker`), and `status` (`pass|fail|error`). Optional context includes `project`, `build_id`, `seed`, `summary`, JSON `metrics`, link-based `artifacts`, and `labels`.
+
+POST example:
 
 ```
-curl -H "X-API-Key: <your-paid-key>" \
-	-H "Accept: application/json" \
-	http://localhost:8000/api/export
+curl -X POST http://localhost:8000/api/episodes \
+	-H "X-API-Key: <paid-key>" \
+	-H "Content-Type: application/json" \
+	-d '{
+				"source": "unity-runner",
+				"mode": "freestyle",
+				"status": "pass",
+				"project": "Babylon",
+				"build_id": "build-123",
+				"metrics": {"fps": 59.9, "steps": 120},
+				"artifacts": ["s3://logs/run-123/output.txt"],
+				"labels": ["nightly", "smoke"]
+			}'
 ```
 
-Until then, no production endpoints require the header—the infrastructure simply ensures we can switch it on without refactors.
+Listing example:
+
+```
+curl -H "X-API-Key: <paid-key>" \
+	"http://localhost:8000/api/episodes?project=Babylon&status=pass&limit=25"
+```
+
+Use `/api/episodes/<id>` for single-record lookups. These endpoints are hidden entirely when `FEATURE_EPISODES` is off so Public tier remains unchanged.
 
 ## Feature & Tier Matrix
 
@@ -73,6 +94,7 @@ Until then, no production endpoints require the header—the infrastructure simp
 | Rate limiting | ON (implemented) | ON (implemented) | ON (implemented) |
 | API key auth | OFF | ON (infra implemented, feature roll-out pending) | ON (infra implemented, feature roll-out pending) |
 | Persistence / exports | OFF | ON (planned) | ON (planned) |
+| Episodes metadata intake | OFF | ON (implemented) | ON (implemented) |
 | RBAC | OFF | OFF | ON (planned) |
 | Audit log | Minimal (implemented) | Expanded (planned) | Extended + admin dashboards (planned) |
 | Webhooks | OFF | OFF | ON (planned) |

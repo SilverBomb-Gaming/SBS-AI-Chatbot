@@ -24,3 +24,8 @@
 - Goal: Prepare Paid/Ultimate tiers with secure-by-default API key parsing and documentation so GitHub push readiness is straightforward.
 - Decision: Added JSON-aware API key parsing, stored sanitized keys as sets on app config, upgraded `@require_api_key` to use constant-time comparisons + JSON-aware 401s, introduced auth-focused pytest coverage, and refreshed README with project status/security guidance.
 - Verification: `pytest -q`
+
+## [Phase B - Episodes Intake]
+- Goal: Stand up a secure “warehouse intake” for Unity QA runs without exposing new surface area to Public tier.
+- Decision: Added `FEATURE_EPISODES` to the tier matrix (Paid/Ultimate only), created the `episodes` SQLite table, shipped `services.episodes` for validation/persistence, exposed gated POST/GET `/api/episodes` endpoints, and documented `.env`/README usage patterns.
+- Verification: `ruff check .`, `black --check .`, `pytest -q`

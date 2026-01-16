@@ -109,9 +109,7 @@ def _prepare_artifacts(value: Any) -> Any:
 def validate_episode_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     data = _require_payload(payload)
     cleaned: Dict[str, Any] = {}
-    cleaned["source"] = _require_string(
-        data, "source", max_length=MAX_SOURCE_LENGTH
-    )
+    cleaned["source"] = _require_string(data, "source", max_length=MAX_SOURCE_LENGTH)
     cleaned["mode"] = _require_string(data, "mode", allowed=ALLOWED_MODES)
     cleaned["status"] = _require_string(data, "status", allowed=ALLOWED_STATUS)
     cleaned["project"] = _optional_string(data, "project")
