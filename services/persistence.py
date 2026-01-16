@@ -84,4 +84,23 @@ def init_storage(database_url: str) -> None:
         )
         """
     )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS episodes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT NOT NULL,
+            created_by TEXT NOT NULL,
+            source TEXT NOT NULL,
+            mode TEXT NOT NULL,
+            project TEXT,
+            build_id TEXT,
+            seed INTEGER,
+            status TEXT NOT NULL,
+            summary TEXT,
+            metrics_json TEXT,
+            artifacts_json TEXT,
+            labels_json TEXT
+        )
+        """
+    )
     conn.commit()
