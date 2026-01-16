@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SBS AI Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main>
+      <h1>SBS AI Chatbot ({{ tier|capitalize }})</h1>
+      <form id="ticket-form">
+        <label for="title">Title</label>
+        <input type="text" id="title" name="title" required />
+        <label for="description">Description</label>
+        <textarea id="description" name="description" required></textarea>
+        <button type="submit">Submit Ticket</button>
+      </form>
+      <section id="triage-result" hidden>
+        <h2>Triage Result</h2>
+        <pre id="triage-json"></pre>
+      </section>
+    </main>
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  </body>
+</html>
