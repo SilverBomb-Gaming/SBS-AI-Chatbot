@@ -53,6 +53,7 @@ class RunResult:
     started_at: str
     finished_at: str
     error: str | None = None
+    artifacts_dir: Path | None = None
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -89,8 +90,13 @@ def apply_cli_overrides(args: argparse.Namespace) -> None:
         env["RUN_DURATION_SECONDS"] = str(args.duration)
     if args.screenshots is not None:
         env["SCREENSHOT_MAX_CAPTURES"] = str(args.screenshots)
+        env["RUNNER_SCREENSHOT_MAX_CAPTURES"] = str(args.screenshots)
+        env["RUNNER_SCREENSHOTS"] = "1" if args.screenshots > 0 else "0"
     if args.screenshot_interval is not None:
         env["SCREENSHOT_INTERVAL_SECONDS"] = str(args.screenshot_interval)
+        env["RUNNER_SCREENSHOT_INTERVAL"] = str(args.screenshot_interval)
+        if args.screenshot_interval > 0 and "RUNNER_SCREENSHOTS" not in env:
+            env["RUNNER_SCREENSHOTS"] = "1"
 
 
 def _prepare_config(config: RunnerConfig) -> None:
@@ -113,11 +119,11 @@ def _apply_scenario_overrides(config: RunnerConfig) -> None:
     if duration:
         config.run_duration_seconds = duration
     interval = overrides.get("screenshot_interval_seconds")
-    if interval:
+    if interval and not config.screenshots_opt_out:
         config.screenshot_interval_seconds = interval
     max_shots = overrides.get("max_screenshots")
-    if max_shots is not None:
-        config.screenshot_max_captures = max_shots or None
+    if max_shots is not None and not config.screenshots_opt_out:
+        config.screenshot_max_captures = max_shots
     if labels := overrides.get("labels"):
         config.episode_labels = _merge_labels(config.episode_labels, tuple(labels))
 
@@ -128,13 +134,14 @@ def _apply_scenario_overrides(config: RunnerConfig) -> None:
         config.run_duration_seconds = min(
             config.run_duration_seconds, BREAKER_MAX_DURATION_SECONDS
         )
-        if (
-            config.screenshot_interval_seconds is None
-            or config.screenshot_interval_seconds > BREAKER_SCREENSHOT_INTERVAL_SECONDS
-        ):
-            config.screenshot_interval_seconds = BREAKER_SCREENSHOT_INTERVAL_SECONDS
-        if not config.screenshot_max_captures:
-            config.screenshot_max_captures = BREAKER_MAX_SCREENSHOTS
+        if not config.screenshots_opt_out:
+            if (
+                config.screenshot_interval_seconds is None
+                or config.screenshot_interval_seconds > BREAKER_SCREENSHOT_INTERVAL_SECONDS
+            ):
+                config.screenshot_interval_seconds = BREAKER_SCREENSHOT_INTERVAL_SECONDS
+            if config.screenshot_max_captures is None:
+                config.screenshot_max_captures = BREAKER_MAX_SCREENSHOTS
 
 
 def _merge_labels(
@@ -354,6 +361,18 @@ def build_episode_payload(config: RunnerConfig, result: RunResult) -> dict:
     return payload
 
 
+def _write_pending_episode(payload: Dict[str, Any], artifacts_dir: Path | None) -> None:
+    if not artifacts_dir:
+        LOGGER.warning("Cannot store pending episode; artifacts directory unknown")
+        return
+    destination = artifacts_dir / "episode_pending.json"
+    try:
+        destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        LOGGER.info("Episode payload saved locally at %s", destination)
+    except OSError as exc:  # pragma: no cover - filesystem safety
+        LOGGER.error("Unable to save pending episode: %s", exc)
+
+
 def execute_run(
     config: RunnerConfig,
     *,
@@ -392,6 +411,7 @@ def execute_run(
         started_at=started_at.isoformat(),
         finished_at=finished_at.isoformat(),
         error=error_message,
+        artifacts_dir=artifacts.run_dir,
     )
 
 
@@ -455,6 +475,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     result = execute_run(config)
     payload = build_episode_payload(config, result)
     if not post_episode(payload, config):
+        _write_pending_episode(payload, result.artifacts_dir)
         LOGGER.error("Failed to post Unity episode to AI-E")
         return 1
     return 0 if result.status == "pass" else 1

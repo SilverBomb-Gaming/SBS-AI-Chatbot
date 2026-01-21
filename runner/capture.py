@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import logging
+import os
+import sys
 import threading
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -67,6 +69,15 @@ class ScreenshotRecorder:
             return
         if self.max_captures is not None and self.max_captures <= 0:
             LOGGER.info("Screenshot capture disabled (max captures set to 0)")
+            return
+        if sys.platform != "win32":
+            LOGGER.info(
+                "Screenshot capture skipped (platform %s does not support desktop capture)",
+                sys.platform,
+            )
+            return
+        if os.environ.get("CI"):
+            LOGGER.info("Screenshot capture skipped (CI environment detected)")
             return
         if mss is None or mss_tools is None:  # pragma: no cover - environment specific
             LOGGER.warning(

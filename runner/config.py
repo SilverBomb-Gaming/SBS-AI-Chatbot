@@ -13,7 +13,8 @@ ALLOWED_RUN_MODES = {"freestyle", "instructed", "breaker", "c1"}
 DEFAULT_RUN_DURATION = 300
 DEFAULT_POSTER_TIMEOUT = 15
 DEFAULT_MAX_SHUTDOWN_SECONDS = 15
-DEFAULT_ARTIFACTS_DIR = Path.cwd() / "unity_runner_artifacts"
+DEFAULT_ARTIFACTS_DIR = Path.cwd() / "runner_artifacts"
+DEFAULT_SCREENSHOT_INTERVAL_SECONDS = 5
 DEFAULT_EPISODE_LABELS = ("harness", "option-a")
 DEFAULT_SCENARIOS_FILE = Path(__file__).resolve().parent / "scenarios.json"
 
@@ -41,6 +42,7 @@ class RunnerConfig:
     scenario_overrides: dict[str, Any] | None = None
     scenarios_file: Path = DEFAULT_SCENARIOS_FILE
     screenshot_max_captures: int | None = None
+    screenshots_opt_out: bool = False
 
     def episodes_endpoint(self) -> str:
         base = self.ai_e_base_url.rstrip("/") + "/"
@@ -61,6 +63,18 @@ def load_runner_config(env: Mapping[str, str] | None = None) -> RunnerConfig:
     screenshot_limit = _parse_optional_non_negative_int(
         env.get("SCREENSHOT_MAX_CAPTURES"), "SCREENSHOT_MAX_CAPTURES"
     )
+    runner_interval = _parse_optional_positive_int(
+        env.get("RUNNER_SCREENSHOT_INTERVAL"), "RUNNER_SCREENSHOT_INTERVAL"
+    )
+    runner_limit = _parse_optional_non_negative_int(
+        env.get("RUNNER_SCREENSHOT_MAX_CAPTURES"), "RUNNER_SCREENSHOT_MAX_CAPTURES"
+    )
+    screenshot_flag = _parse_optional_bool(env.get("RUNNER_SCREENSHOTS"))
+
+    if runner_interval is not None:
+        screenshot_interval = runner_interval
+    if runner_limit is not None:
+        screenshot_limit = runner_limit
     ai_e_base_url = _parse_base_url(env.get("AI_E_BASE_URL"))
     api_key = _require_non_empty(env.get("AI_E_API_KEY"), "AI_E_API_KEY")
     project = _require_non_empty(env.get("PROJECT_NAME"), "PROJECT_NAME")
@@ -71,6 +85,13 @@ def load_runner_config(env: Mapping[str, str] | None = None) -> RunnerConfig:
     episode_labels = _parse_episode_labels(env.get("EPISODE_LABELS"))
 
     artifacts_root = DEFAULT_ARTIFACTS_DIR
+
+    screenshots_opt_out = screenshot_flag is False
+    if screenshot_flag is False:
+        screenshot_interval = None
+        screenshot_limit = None
+    elif screenshot_flag is True:
+        screenshot_interval = screenshot_interval or DEFAULT_SCREENSHOT_INTERVAL_SECONDS
 
     return RunnerConfig(
         unity_executable=unity_path,
@@ -85,6 +106,7 @@ def load_runner_config(env: Mapping[str, str] | None = None) -> RunnerConfig:
         scenario_id=scenario_id,
         scenarios_file=scenarios_file,
         screenshot_max_captures=screenshot_limit,
+        screenshots_opt_out=screenshots_opt_out,
         episode_labels=episode_labels,
     )
 
@@ -144,7 +166,18 @@ def _parse_optional_non_negative_int(raw_value: str | None, env_name: str) -> in
         raise RunnerConfigError(f"{env_name} must be an integer") from exc
     if value < 0:
         raise RunnerConfigError(f"{env_name} must be zero or positive")
-    return value or None
+    return value
+
+
+def _parse_optional_bool(raw_value: str | None) -> bool | None:
+    if raw_value is None or raw_value.strip() == "":
+        return None
+    normalized = raw_value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise RunnerConfigError("RUNNER_SCREENSHOTS must be a boolean (0/1, true/false)")
 
 
 def _parse_base_url(raw_value: str | None) -> str:
