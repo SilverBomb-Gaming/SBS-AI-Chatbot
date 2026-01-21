@@ -46,6 +46,18 @@ def _valid_payload(**overrides):
     return payload
 
 
+def _scenario_payload(**overrides):
+    payload = {
+        "scenario_id": "guided-smoke",
+        "scenario_name": "Guided Smoke",
+        "scenario_steps": ["Boot scene", "Validate heartbeat", "Exit"],
+        "expected": {"no_crash": True, "min_runtime": 30},
+        "observed": {"runtime_seconds": 32, "exit_code": 0},
+    }
+    payload.update(overrides)
+    return payload
+
+
 def test_feature_off_returns_404(public_app):
     response = public_app.test_client().post(
         "/api/episodes", json=_valid_payload(), headers={"X-API-Key": "alpha"}
@@ -152,6 +164,35 @@ def test_limit_offset_validation(client):
 
     response = client.get(
         "/api/episodes?offset=-10",
+        headers={"X-API-Key": "alpha"},
+    )
+    assert response.status_code == 400
+
+
+def test_scenario_payload_round_trip(client):
+    response = client.post(
+        "/api/episodes",
+        json=_valid_payload(mode="instructed", scenario=_scenario_payload()),
+        headers={"X-API-Key": "alpha"},
+    )
+    assert response.status_code == 201
+    episode_id = response.get_json()["episode_id"]
+
+    detail = client.get(
+        f"/api/episodes/{episode_id}",
+        headers={"X-API-Key": "alpha"},
+    )
+    assert detail.status_code == 200
+    episode = detail.get_json()["episode"]
+    assert episode["scenario"]["scenario_id"] == "guided-smoke"
+    assert "scenario" not in (episode["metrics"] or {})
+
+
+def test_invalid_scenario_rejected(client):
+    bad = _scenario_payload(scenario_steps=[], expected={"no_crash": True})
+    response = client.post(
+        "/api/episodes",
+        json=_valid_payload(mode="instructed", scenario=bad),
         headers={"X-API-Key": "alpha"},
     )
     assert response.status_code == 400
