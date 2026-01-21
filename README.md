@@ -37,6 +37,70 @@ python app.py
 
 Visit http://127.0.0.1:8000 for the UI, or POST to `/api/triage` for JSON output. Run tests at any time with `python -m pytest -q`.
 
+### Option B — Unattended runs ("while I sleep")
+
+Option B automates Unity playback so overnight smoke tours keep creating AI-E episodes with the logs, screenshots, and scenario metadata needed for human review. The runner can operate in `freestyle`, `instructed`, or `breaker` mode without touching the public UI; it boots the Windows standalone build, streams stdout/stderr into artifacts, optionally captures desktop screenshots, and posts a structured `/api/episodes` payload.
+
+#### Required configuration
+
+Environment variables (override with CLI flags when needed):
+
+- `UNITY_EXE_PATH` – absolute path to the built player executable.
+- `AI_E_BASE_URL` / `AI_E_API_KEY` – Paid/Ultimate ingestion endpoint + API key.
+- `PROJECT_NAME` / `BUILD_ID` – labels that surface in the Episodes list.
+- `RUN_MODE` – `freestyle`, `instructed`, `breaker`, or legacy `c1`.
+- `RUN_DURATION_SECONDS` – soft runtime cap (breaker clamps to ≤90s automatically).
+- `SCENARIO_ID` / `SCENARIOS_FILE` – select a scenario from `runner/scenarios.json` (required for instructed + breaker).
+- `RUNNER_SCREENSHOTS` – `1` enables desktop capture, `0` disables (defaults to off unless a scenario/mode turns it on).
+- `RUNNER_SCREENSHOT_INTERVAL` – optional override for capture cadence in seconds (falls back to scenario defaults or `5s`).
+- `RUNNER_SCREENSHOT_MAX_CAPTURES` – optional hard limit on screenshots per run (`0` keeps capture disabled).
+- Legacy aliases (`SCREENSHOT_INTERVAL_SECONDS`, `SCREENSHOT_MAX_CAPTURES`) are still honored for backwards compatibility.
+
+#### Artifact layout
+
+Every execution stores evidence inside `runner_artifacts/<run_id>/`:
+
+```
+runner_artifacts/<run_id>/
+  logs/
+	stdout.log
+	stderr.log
+  screenshots/            # only populated when desktop capture is enabled and running on Windows
+  episode_pending.json    # written only if posting to /api/episodes fails
+```
+
+The runner logs the artifact path at startup, and these files are referenced directly inside the emitted episode payload for traceability.
+
+#### Screenshot controls
+
+- Desktop capture is only attempted on Windows hosts that are not running under `CI`; other platforms skip it automatically.
+- Export `RUNNER_SCREENSHOTS=1` (or pass `--screenshots <count>` and `--screenshot-interval <seconds>`) to opt in; `RUNNER_SCREENSHOTS=0` guarantees screenshots stay off even if a scenario tries to override them.
+- Breaker mode tightens the interval to ≤2s and caps screenshots at 20 unless you provide stricter values.
+
+#### Episode posting and retries
+
+- Successful runs call `/api/episodes` with metrics (`duration_seconds`, `exit_code`, `screenshots_captured`), the artifact paths shown above, scenario contracts, and auto-applied labels per mode.
+- If the POST fails, the exact JSON payload is saved as `episode_pending.json` inside the artifact folder so it can be replayed later once connectivity is restored.
+
+#### Example unattended commands
+
+```
+# Freestyle smoke (no screenshots)
+python -m runner.run_unity --mode freestyle --scenario freestyle-smoke --screenshots 0
+
+# Instructed guided tour (enable screenshots every 5s)
+$env:RUNNER_SCREENSHOTS='1'
+python -m runner.run_unity --mode instructed --scenario guided-tour --duration 60 `
+	--screenshots 6 --screenshot-interval 5
+
+# Breaker sprint (auto 45s cap + 2s screenshots)
+$env:RUNNER_SCREENSHOTS='1'
+python -m runner.run_unity --mode breaker --scenario breaker-sprint --screenshots 10 `
+	--screenshot-interval 2
+```
+
+Status rules remain the same: exit code `0` → `pass`, non-zero exit → `fail`, runner-side exceptions → `error`. Every payload reports runtime metrics, artifact paths, and (when provided) the scenario contract inside both `metrics.scenario` and top-level `scenario` so `/api/episodes` echoes the entire contract back for auditing.
+
 ### Environment presets
 
 ```
@@ -58,7 +122,7 @@ OPENAI_API_KEY= # optional, only flips FEATURE_LLM_ASSIST when set
 ### Curl example (future Paid endpoints)
 ### Episodes API (Paid/Ultimate)
 
-Episodes capture QA or playtest runs as metadata (no binaries) so Unity “AI eyes” can report outcomes safely. Required fields: `source`, `mode` (`freestyle|instructed|breaker`), and `status` (`pass|fail|error`). Optional context includes `project`, `build_id`, `seed`, `summary`, JSON `metrics`, link-based `artifacts`, and `labels`.
+Episodes capture QA or playtest runs as metadata (no binaries) so Unity “AI eyes” can report outcomes safely. Required fields: `source`, `mode` (`freestyle|instructed|breaker|c1`), and `status` (`pass|fail|error`). Optional context includes `project`, `build_id`, `seed`, `summary`, JSON `metrics`, link-based `artifacts`, `labels`, and a structured `scenario` contract describing how the run was orchestrated (`scenario_id`, `scenario_name`, `scenario_steps`, optional `scenario_seed`, expected vs. observed objects).
 
 POST example:
 
@@ -67,15 +131,22 @@ curl -X POST http://localhost:8000/api/episodes \
 	-H "X-API-Key: <paid-key>" \
 	-H "Content-Type: application/json" \
 	-d '{
-				"source": "unity-runner",
-				"mode": "freestyle",
-				"status": "pass",
-				"project": "Babylon",
-				"build_id": "build-123",
-				"metrics": {"fps": 59.9, "steps": 120},
-				"artifacts": ["s3://logs/run-123/output.txt"],
-				"labels": ["nightly", "smoke"]
-			}'
+			"source": "unity-runner",
+			"mode": "instructed",
+			"status": "pass",
+			"project": "Babylon",
+			"build_id": "build-123",
+			"metrics": {"duration_seconds": 47.8, "exit_code": 0},
+			"artifacts": ["s3://logs/run-123/output.txt"],
+			"labels": ["paid", "tour"],
+			"scenario": {
+				"scenario_id": "guided-tour",
+				"scenario_name": "Guided Site Tour",
+				"scenario_steps": ["load", "walk", "capture screenshot", "exit"],
+				"expected": {"no_crash": true},
+				"observed": {"runtime_seconds": 47.8, "exit_code": 0}
+			}
+		}'
 ```
 
 Listing example:
