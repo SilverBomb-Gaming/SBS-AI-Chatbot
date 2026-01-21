@@ -7,3 +7,8 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
+
+# Runner artifacts (canonical folder name)
+runner_artifacts/
+# Legacy folder name (also ignored)
+unity_runner_artifacts/

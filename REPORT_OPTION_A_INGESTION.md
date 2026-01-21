@@ -7,7 +7,7 @@ Date: 20 Jan 2026
 - Unity project metadata: `E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/AIE-TestHarness/TestHarness/ProjectSettings/ProjectVersion.txt`
 - External build root (kept outside git): `E:/AI projects 2025/AIE-TestHarness/Builds/`
 - Runner executable used for this proof: `E:/AI projects 2025/AIE-TestHarness/Builds/Win64/TestHarness.exe`
-- Runner artifacts: `E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/unity_runner_artifacts/20260120_233835/`
+- Runner artifacts: `E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260120_233835/`
 - Flask API base: `http://127.0.0.1:8000` (paid tier)
 
 ## Unity Harness Summary
@@ -38,7 +38,7 @@ $env:BUILD_ID="AIE-TestHarness-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 ```
 
 Key runner log lines:
-- `Artifacts stored in ... \unity_runner_artifacts\20260120_233835`
+- `Artifacts stored in ... \runner_artifacts\20260120_233835`
 - `Episode posted successfully (status 201)`
 
 ## Episode Payload Example
@@ -57,8 +57,8 @@ Posted JSON (echoed from `/api/episodes` query after ingestion):
   },
   "artifacts": {
     "logs": [
-      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/unity_runner_artifacts/20260120_233835/logs/stdout.log",
-      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/unity_runner_artifacts/20260120_233835/logs/stderr.log"
+      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260120_233835/logs/stdout.log",
+      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260120_233835/logs/stderr.log"
     ],
     "screenshots": []
   },

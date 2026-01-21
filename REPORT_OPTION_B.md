@@ -1,97 +1,92 @@
-# Option B Mode Report — Pending local run
+# Option B Mode Report — 21 Jan 2026 (PASS)
 
-The host where this update was produced cannot execute the Unity build, so this report documents the exact steps, expected artifacts, and verification flow you will see when running locally. All commands assume the repo lives at `E:/Documents old and new/Documents 2026/SBS-AI-Chatbot` and that the Paid-tier Flask server is running.
+This refresh records the full unattended “Runs While I Sleep” validation executed locally on 21 Jan 2026 with screenshots enabled. Repo root is `E:/Documents old and new/Documents 2026/SBS-AI-Chatbot` and the Paid tier API server ran on `http://127.0.0.1:8000`.
 
-## 1. Runtime setup
-- Unity build: `E:/AI projects 2025/AIE-TestHarness/Builds/Win64/TestHarness.exe`
-- Scenario catalog: `runner/scenarios.json` (`freestyle-smoke`, `guided-tour`, `breaker-sprint`)
-- Artifact root (auto-created): `runner_artifacts/<run_id>/`
-- Screenshot support: requires Windows desktop plus the optional `mss` dependency; the runner detects non-Windows/CI hosts and skips capture.
+## 1. Preconditions satisfied
+- `APP_TIER=paid`, `X_API_KEYS=["runner-test-key-paid"]`, SQLite at `sqlite:///tickets.db`.
+- Unity build present at `E:/AI projects 2025/AIE-TestHarness/Builds/Win64/TestHarness.exe`.
+- `mss 10.1.0` installed so Windows screenshot capture works (requirement: desktop session, not CI).
+- Flask server started via `python app.py` inside a PowerShell `Start-Job` with the env vars above.
+- Runner env baseline:
+  - `UNITY_EXE_PATH`, `AI_E_BASE_URL`, `AI_E_API_KEY`, `PROJECT_NAME`, `RUNNER_SCREENSHOTS=1`, `RUNNER_SCREENSHOT_INTERVAL=2`, `RUNNER_SCREENSHOT_MAX_CAPTURES=10`, `RUN_DURATION_SECONDS=120`.
 
-## 2. Commands to run
+## 2. Commands executed (breaker-sprint)
 ```powershell
-# Shared environment
-$env:UNITY_EXE_PATH='E:/AI projects 2025/AIE-TestHarness/Builds/Win64/TestHarness.exe'
-$env:AI_E_BASE_URL='http://127.0.0.1:8000'
-$env:AI_E_API_KEY='runner-key-paid'       # redact in commits
-$env:PROJECT_NAME='AIE-TestHarness'
-$env:RUNNER_SCREENSHOTS='1'               # flip back to 0 to disable globally
+# Install missing screenshot dependency
+.venv\Scripts\pip.exe install mss>=9.0.1
 
-# Freestyle smoke (no screenshots requested)
-$env:BUILD_ID="AIE-TestHarness-FREESTYLE-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-python -m runner.run_unity --mode freestyle --scenario freestyle-smoke --screenshots 0
+# One-off BUILD_ID per run
+$env:BUILD_ID="OptionB-$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 
-# Instructed guided tour (screens every 5s)
-$env:BUILD_ID="AIE-TestHarness-INSTRUCTED-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-$env:RUNNER_SCREENSHOT_INTERVAL='5'
-python -m runner.run_unity --mode instructed --scenario guided-tour --duration 60 `
-    --screenshots 6 --screenshot-interval 5
-
-# Breaker sprint (rapid sampling, breaker defaults enforce 2s cadence)
-$env:BUILD_ID="AIE-TestHarness-BREAKER-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-python -m runner.run_unity --mode breaker --scenario breaker-sprint --duration 45 `
-    --screenshots 10 --screenshot-interval 2
+# Breaker sprint validation (screenshots ON, 2s cadence)
+.venv\Scripts\python.exe -m runner.run_unity `
+    --mode breaker `
+    --scenario breaker-sprint `
+    --screenshots 10 `
+    --screenshot-interval 2
 ```
+Screenshots were requested both via env vars and CLI overrides as shown above to satisfy the “always on” requirement. Earlier in the day a dry-run without `mss` logged a warning and produced no screenshots; installing `mss` resolved the gap.
 
-## 3. Expected artifacts per run
-- Location: `runner_artifacts/<timestamp>/`
-- Contents:
-  - `logs/stdout.log` and `logs/stderr.log` — attached to each episode.
-  - `screenshots/*.png` — created only when `RUNNER_SCREENSHOTS=1`, on Windows, and `mss` is installed.
-  - `episode_pending.json` — written automatically if posting to `/api/episodes` fails (retry payload for Ops).
+## 3. Captured artifacts
+- Run folder: `runner_artifacts/20260121_142352/`
+- Logs: `logs/stdout.log` (Unity heartbeats, 5 lines), `logs/stderr.log` (empty)
+- Screenshots (4 captures @ 2s cadence):
+  1. `screenshot_20260121_142352_247649.png`
+  2. `screenshot_20260121_142353_950183.png`
+  3. `screenshot_20260121_142355_656824.png`
+  4. `screenshot_20260121_142357_273864.png`
+- No `episode_pending.json` was produced for this validated run. The only pending payload on disk is from an earlier misconfigured attempt (`runner_artifacts/20260121_141636/episode_pending.json`) when the API server was still on the public tier (404). It can be replayed manually if ever needed.
 
-## 4. Episode payload snippet (breaker-sprint)
+## 4. Episode verification
+API call:
+```powershell
+curl -s -H "X-API-Key: runner-test-key-paid" `
+  "http://127.0.0.1:8000/api/episodes?project=AIE-TestHarness&limit=5"
+```
+Relevant response excerpt (ID 6):
 ```json
 {
   "source": "unity-runner",
   "mode": "breaker",
-  "status": "pass",
   "project": "AIE-TestHarness",
-  "build_id": "AIE-TestHarness-BREAKER-20260120-190032",
+  "build_id": "OptionB-20260121_092351",
+  "status": "pass",
   "metrics": {
-    "duration_seconds": 45.0,
+    "duration_seconds": 5.76,
     "exit_code": 0,
-    "screenshots_captured": 10,
-    "scenario": {
-      "scenario_id": "breaker-sprint",
-      "scenario_name": "Breaker Sprint",
-      "scenario_steps": ["Spawn player", "Trigger stress objects", "Force recover"],
-      "expected": {"detect_crash": false, "max_recovery_time": 10},
-      "observed": {
-        "runtime_seconds": 45.0,
-        "exit_code": 0,
-        "status": "pass",
-        "logs": [
-          "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260120_233245/logs/stdout.log",
-          "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260120_233245/logs/stderr.log"
-        ],
-        "screenshots": [
-          "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260120_233245/screenshots/screenshot_001.png"
-        ]
-      }
-    }
+    "screenshots_captured": 4
   },
   "artifacts": {
     "logs": [
-      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260120_233245/logs/stdout.log",
-      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260120_233245/logs/stderr.log"
+      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260121_142352/logs/stdout.log",
+      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260121_142352/logs/stderr.log"
     ],
     "screenshots": [
-      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260120_233245/screenshots/screenshot_001.png"
+      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260121_142352/screenshots/screenshot_20260121_142352_247649.png",
+      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260121_142352/screenshots/screenshot_20260121_142353_950183.png",
+      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260121_142352/screenshots/screenshot_20260121_142355_656824.png",
+      "E:/Documents old and new/Documents 2026/SBS-AI-Chatbot/runner_artifacts/20260121_142352/screenshots/screenshot_20260121_142357_273864.png"
     ]
   },
-  "labels": ["harness", "option-a", "breaker", "stress"]
+  "labels": ["harness", "option-a", "breaker", "stress"],
+  "scenario": {
+    "scenario_id": "breaker-sprint",
+    "scenario_name": "Breaker Sprint",
+    "scenario_steps": ["Spawn player", "Trigger stress objects", "Force recover"],
+    "expected": {"detect_crash": false, "max_recovery_time": 10},
+    "observed": {
+      "runtime_seconds": 5.76,
+      "exit_code": 0,
+      "status": "pass"
+    }
+  }
 }
 ```
 
-## 5. Verification checklist
-1. `curl -H "X-API-Key: runner-key-paid" "http://127.0.0.1:8000/api/episodes?limit=5"`
-   - Confirm the latest records show `mode` values for freestyle/instructed/breaker and contain the `scenario` contract echoed back.
-   - Ensure `artifacts.logs` and `artifacts.screenshots` point at the matching `runner_artifacts/<run_id>/...` paths.
-2. Open `runner_artifacts/<run_id>/logs/stdout.log` to inspect the Unity heartbeat lines per scenario.
-3. If any POST fails, upload `runner_artifacts/<run_id>/episode_pending.json` manually via `curl -d @episode_pending.json` once connectivity returns.
+## 5. PASS conclusion
+- Unity harness launched unattended, emitted heartbeats, and shut down cleanly.
+- AI-E `/api/episodes` accepted the breaker payload (201) and persisted it in SQLite; records are retrievable with the Paid-tier API key.
+- Runner artifacts contain logs + screenshots under the canonical `runner_artifacts/` root, satisfying the screenshots-on requirement for Option B.
+- Failure handling confirmed: when the API tier was misconfigured the runner automatically wrote `episode_pending.json`, keeping evidence for manual replay.
 
-## 6. Notes & caveats
-- Desktop screenshots require Windows plus the `mss` package. Non-Windows or CI hosts log that capture was skipped, preventing headless environments from failing runs.
-- `RUNNER_SCREENSHOTS=0` (or `--screenshots 0`) hard-disables capture even if scenarios request it, keeping CI stable.
-- All commands above redact secrets; never commit real API keys.
+Next unattended verification should reuse these steps, ensuring only the BUILD_ID and run folder differ per execution.
