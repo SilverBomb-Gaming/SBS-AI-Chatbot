@@ -29,3 +29,8 @@
 - Goal: Stand up a secure “warehouse intake” for Unity QA runs without exposing new surface area to Public tier.
 - Decision: Added `FEATURE_EPISODES` to the tier matrix (Paid/Ultimate only), created the `episodes` SQLite table, shipped `services.episodes` for validation/persistence, exposed gated POST/GET `/api/episodes` endpoints, and documented `.env`/README usage patterns.
 - Verification: `ruff check .`, `black --check .`, `pytest -q`
+
+## [Phase C1 - Unity Runner MVP]
+- Goal: Add a standalone Unity runner that captures execution logs/screenshots and reports AI-E episodes automatically.
+- Decision: Created the `runner` module with config validation, artifact management, screenshot capture, subprocess supervision, and AI-E POST + retry logic. Added pytest coverage for status mapping, payload construction, and artifact collection plus README/.env updates documenting required configuration.
+- Verification: `ruff check .`, `black --check .`, `pytest -q`
