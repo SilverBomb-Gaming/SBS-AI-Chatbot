@@ -1,0 +1,58 @@
+[
+  {
+    "scenario_id": "freestyle-smoke",
+    "scenario_name": "Freestyle Smoke",
+    "scenario_steps": [
+      "Launch harness",
+      "Collect heartbeat logs",
+      "Verify graceful exit"
+    ],
+    "expected": {
+      "no_crash": true,
+      "min_runtime": 20
+    },
+    "runner": {
+      "labels": ["freestyle", "smoke"]
+    }
+  },
+  {
+    "scenario_id": "guided-tour",
+    "scenario_name": "Guided Site Tour",
+    "scenario_steps": [
+      "Load scene",
+      "Walk to control room",
+      "Capture evidence screenshot",
+      "Exit to menu"
+    ],
+    "expected": {
+      "complete_steps": true,
+      "max_duration": 60
+    },
+    "scenario_seed": 314,
+    "runner": {
+      "duration_seconds": 60,
+      "screenshot_interval_seconds": 5,
+      "max_screenshots": 6,
+      "labels": ["instructed", "tour"]
+    }
+  },
+  {
+    "scenario_id": "breaker-sprint",
+    "scenario_name": "Breaker Sprint",
+    "scenario_steps": [
+      "Spawn player",
+      "Trigger stress objects",
+      "Force recover"
+    ],
+    "expected": {
+      "detect_crash": false,
+      "max_recovery_time": 10
+    },
+    "runner": {
+      "duration_seconds": 45,
+      "screenshot_interval_seconds": 1,
+      "max_screenshots": 10,
+      "labels": ["breaker", "stress"]
+    }
+  }
+]
