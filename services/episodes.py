@@ -7,12 +7,13 @@ from typing import Any, Dict, List, Optional
 
 from . import persistence
 
-ALLOWED_MODES = {"freestyle", "instructed", "breaker"}
+ALLOWED_MODES = {"freestyle", "instructed", "breaker", "c1"}
 ALLOWED_STATUS = {"pass", "fail", "error"}
 MAX_SUMMARY_LENGTH = 2000
 MAX_JSON_LENGTH = 8000
 MAX_SOURCE_LENGTH = 64
 MAX_TEXT_LENGTH = 255
+MAX_SCENARIO_STEPS = 50
 
 
 def _require_payload(payload: Any) -> Dict[str, Any]:
@@ -106,6 +107,52 @@ def _prepare_artifacts(value: Any) -> Any:
     raise ValueError("artifacts must be a list or object")
 
 
+def _prepare_scenario(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    scenario = payload.get("scenario")
+    if scenario is None:
+        return None
+    if not isinstance(scenario, dict):
+        raise ValueError("scenario must be an object")
+
+    scenario_id = _require_string(scenario, "scenario_id")
+    scenario_name = _require_string(scenario, "scenario_name")
+    raw_steps = scenario.get("scenario_steps")
+    if not isinstance(raw_steps, list) or not raw_steps:
+        raise ValueError("scenario_steps must be a non-empty list")
+    if len(raw_steps) > MAX_SCENARIO_STEPS:
+        raise ValueError("scenario_steps exceeds maximum length")
+    steps: List[str] = []
+    for entry in raw_steps:
+        if not isinstance(entry, str):
+            raise ValueError("scenario_steps entries must be strings")
+        cleaned = entry.strip()
+        if cleaned:
+            steps.append(cleaned)
+    if not steps:
+        raise ValueError("scenario_steps must contain at least one step")
+
+    expected = scenario.get("expected")
+    if not isinstance(expected, dict) or not expected:
+        raise ValueError("scenario.expected must be an object")
+
+    observed = scenario.get("observed")
+    if observed is not None and not isinstance(observed, dict):
+        raise ValueError("scenario.observed must be an object")
+
+    prepared: Dict[str, Any] = {
+        "scenario_id": scenario_id,
+        "scenario_name": scenario_name,
+        "scenario_steps": steps,
+        "expected": expected,
+    }
+    seed = _optional_int(scenario, "scenario_seed")
+    if seed is not None:
+        prepared["scenario_seed"] = seed
+    if observed is not None:
+        prepared["observed"] = observed
+    return prepared
+
+
 def validate_episode_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     data = _require_payload(payload)
     cleaned: Dict[str, Any] = {}
@@ -118,11 +165,17 @@ def validate_episode_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     cleaned["summary"] = _optional_string(
         data, "summary", max_length=MAX_SUMMARY_LENGTH
     )
+    scenario = _prepare_scenario(data)
 
     metrics = data.get("metrics")
     if metrics is not None and not isinstance(metrics, dict):
         raise ValueError("metrics must be an object")
-    cleaned["metrics_json"] = _serialize_json_field("metrics", metrics)
+    metrics_payload = dict(metrics) if isinstance(metrics, dict) else {}
+    if scenario:
+        metrics_payload["scenario"] = scenario
+    cleaned["metrics_json"] = _serialize_json_field(
+        "metrics", metrics_payload or None
+    )
 
     artifacts = _prepare_artifacts(data.get("artifacts"))
     cleaned["artifacts_json"] = _serialize_json_field("artifacts", artifacts)
@@ -200,6 +253,12 @@ def _deserialize_json(blob: Optional[str]) -> Any:
 
 
 def _row_to_episode(row: Any) -> Dict[str, Any]:
+    metrics = _deserialize_json(row["metrics_json"])
+    scenario = None
+    if isinstance(metrics, dict):
+        scenario = metrics.pop("scenario", None)
+        if not metrics:
+            metrics = None
     return {
         "id": row["id"],
         "created_at": row["created_at"],
@@ -211,9 +270,10 @@ def _row_to_episode(row: Any) -> Dict[str, Any]:
         "seed": row["seed"],
         "status": row["status"],
         "summary": row["summary"],
-        "metrics": _deserialize_json(row["metrics_json"]),
+        "metrics": metrics,
         "artifacts": _deserialize_json(row["artifacts_json"]),
         "labels": _deserialize_json(row["labels_json"]),
+        **({"scenario": scenario} if scenario else {}),
     }
 
 
