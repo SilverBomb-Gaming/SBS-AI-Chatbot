@@ -105,7 +105,10 @@ class ScreenshotRecorder:
         try:
             with mss.mss() as screen:  # type: ignore[attr-defined]
                 while not self._stop_event.is_set():
-                    if self.max_captures is not None and len(self._captures) >= self.max_captures:
+                    if (
+                        self.max_captures is not None
+                        and len(self._captures) >= self.max_captures
+                    ):
                         LOGGER.info(
                             "Screenshot capture limit of %s reached; stopping",
                             self.max_captures,

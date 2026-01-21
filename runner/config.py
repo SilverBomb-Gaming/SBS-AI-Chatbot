@@ -157,7 +157,9 @@ def _parse_optional_positive_int(raw_value: str | None, env_name: str) -> int | 
     return value
 
 
-def _parse_optional_non_negative_int(raw_value: str | None, env_name: str) -> int | None:
+def _parse_optional_non_negative_int(
+    raw_value: str | None, env_name: str
+) -> int | None:
     if raw_value is None or raw_value.strip() == "":
         return None
     try:

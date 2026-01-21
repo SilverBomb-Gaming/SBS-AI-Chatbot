@@ -57,8 +57,12 @@ class RunResult:
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Execute a Unity build and report episodes.")
-    parser.add_argument("--mode", choices=sorted(ALLOWED_RUN_MODES), help="Override RUN_MODE")
+    parser = argparse.ArgumentParser(
+        description="Execute a Unity build and report episodes."
+    )
+    parser.add_argument(
+        "--mode", choices=sorted(ALLOWED_RUN_MODES), help="Override RUN_MODE"
+    )
     parser.add_argument("--scenario", help="Scenario identifier to execute")
     parser.add_argument(
         "--scenarios-file",
@@ -137,7 +141,8 @@ def _apply_scenario_overrides(config: RunnerConfig) -> None:
         if not config.screenshots_opt_out:
             if (
                 config.screenshot_interval_seconds is None
-                or config.screenshot_interval_seconds > BREAKER_SCREENSHOT_INTERVAL_SECONDS
+                or config.screenshot_interval_seconds
+                > BREAKER_SCREENSHOT_INTERVAL_SECONDS
             ):
                 config.screenshot_interval_seconds = BREAKER_SCREENSHOT_INTERVAL_SECONDS
             if config.screenshot_max_captures is None:
@@ -181,9 +186,7 @@ def load_scenario_plan(file_path: Path, scenario_id: str) -> ScenarioPlan:
     try:
         raw = json.loads(file_path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
-        raise RunnerScenarioError(
-            f"Scenarios file not found: {file_path}"
-        ) from exc
+        raise RunnerScenarioError(f"Scenarios file not found: {file_path}") from exc
     except json.JSONDecodeError as exc:
         raise RunnerScenarioError(
             f"Scenarios file {file_path} is not valid JSON"
@@ -353,7 +356,9 @@ def build_episode_payload(config: RunnerConfig, result: RunResult) -> dict:
         "labels": list(config.episode_labels),
     }
     if config.scenario:
-        scenario_payload = _build_scenario_payload(config.scenario, result, logs, screenshots)
+        scenario_payload = _build_scenario_payload(
+            config.scenario, result, logs, screenshots
+        )
         payload["scenario"] = scenario_payload
         metrics["scenario"] = copy.deepcopy(scenario_payload)
     if result.error:

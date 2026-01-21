@@ -173,9 +173,7 @@ def validate_episode_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     metrics_payload = dict(metrics) if isinstance(metrics, dict) else {}
     if scenario:
         metrics_payload["scenario"] = scenario
-    cleaned["metrics_json"] = _serialize_json_field(
-        "metrics", metrics_payload or None
-    )
+    cleaned["metrics_json"] = _serialize_json_field("metrics", metrics_payload or None)
 
     artifacts = _prepare_artifacts(data.get("artifacts"))
     cleaned["artifacts_json"] = _serialize_json_field("artifacts", artifacts)
