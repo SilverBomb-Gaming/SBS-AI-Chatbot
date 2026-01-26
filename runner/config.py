@@ -38,6 +38,13 @@ DEFAULT_TARGET_IGNORE = [
     "python.exe",
     "code.exe",
     "devenv.exe",
+    "shellexperiencehost.exe",
+    "applicationframehost.exe",
+    "startmenuexperiencehost.exe",
+    "searchhost.exe",
+    "textinputhost.exe",
+    "lockapp.exe",
+    "dwm.exe",
 ]
 ALLOWED_TARGET_MODES = {"foreground-at-start", "first-non-terminal", "exe"}
 BASE_URL_ENV_KEYS = ("AI_E_BASE_URL", "API_BASE_URL", "SERVER_URL")

@@ -497,22 +497,40 @@ def _lock_canonical_target(
     lock_seconds = max(1, config.target_lock_seconds)
     ignore_set = {value.strip().lower() for value in config.target_ignore if value}
     target_exe = (config.target_exe or "").strip().lower()
+    ignore_titles = {"task switching", "program manager", ""}
 
     deadline = time.monotonic() + lock_seconds
     interval = 0.25
+    stable_target: TargetInfo | None = None
+    stable_count = 0
     while time.monotonic() < deadline:
         candidate = detect_foreground_target()
+        title = (candidate.window_title or "").strip().lower() if candidate else ""
+        if candidate and title in ignore_titles:
+            candidate = None
         if mode == "exe" and candidate:
             exe_name = (candidate.process_name or "").lower()
             exe_path = (candidate.exe_path or "").lower()
             if target_exe and (exe_name == target_exe or exe_path == target_exe):
-                event_logger.log("target_locked", _format_target_message(candidate))
-                return candidate
+                if _target_changed(stable_target, candidate):
+                    stable_target = candidate
+                    stable_count = 1
+                else:
+                    stable_count += 1
+                if stable_count >= 3:
+                    event_logger.log("target_locked", _format_target_message(candidate))
+                    return candidate
         elif mode == "first-non-terminal" and candidate:
             exe_name = (candidate.process_name or "").lower()
             if exe_name and exe_name not in ignore_set:
-                event_logger.log("target_locked", _format_target_message(candidate))
-                return candidate
+                if _target_changed(stable_target, candidate):
+                    stable_target = candidate
+                    stable_count = 1
+                else:
+                    stable_count += 1
+                if stable_count >= 3:
+                    event_logger.log("target_locked", _format_target_message(candidate))
+                    return candidate
         time.sleep(interval)
 
     fallback = initial
