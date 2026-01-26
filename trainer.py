@@ -80,6 +80,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--debug-hud", action="store_true")
     parser.add_argument("--hud-p1-roi", default="")
     parser.add_argument("--hud-p2-roi", default="")
+    parser.add_argument("--hud-p1-poly", default="")
+    parser.add_argument("--hud-p2-poly", default="")
+    parser.add_argument("--hud-roi-mode", choices=["poly", "rect"], default="poly")
     parser.add_argument("--hud-y-offset-px", type=int, default=0)
     parser.add_argument("--hud-y-offset-norm", type=float, default=None)
     parser.add_argument("--seed", type=int, default=None)
@@ -177,6 +180,19 @@ def _parse_roi(raw: str, fallback: Tuple[float, float, float, float]) -> Tuple[f
         return tuple(float(p) for p in parts)  # type: ignore[return-value]
     except ValueError:
         return fallback
+
+
+def _parse_poly(raw: str, fallback: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    if not raw:
+        return fallback
+    parts = [p.strip() for p in raw.split(",")]
+    if len(parts) != 8:
+        return fallback
+    try:
+        values = [float(p) for p in parts]
+    except ValueError:
+        return fallback
+    return [(values[i], values[i + 1]) for i in range(0, 8, 2)]
 
 
 def _apply_y_offset(
@@ -327,13 +343,25 @@ def main() -> int:
     tracker = None
     p1_roi_norm: Tuple[float, float, float, float] | None = None
     p2_roi_norm: Tuple[float, float, float, float] | None = None
+    p1_poly_norm: list[tuple[float, float]] | None = None
+    p2_poly_norm: list[tuple[float, float]] | None = None
+    roi_mode = args.hud_roi_mode
     if not args.no_vision:
         try:
             from runner.health_bar import HealthBarTracker
-            from runner.health_bar import P1_HEALTH_N, P2_HEALTH_N
+            from runner.health_bar import (
+                P1_HEALTH_N,
+                P2_HEALTH_N,
+                P1_BAR_POLY_NORM,
+                P2_BAR_POLY_NORM,
+                estimate_health_poly,
+                norm_poly_to_px,
+            )
 
             p1_roi_norm = _parse_roi(args.hud_p1_roi, P1_HEALTH_N)
             p2_roi_norm = _parse_roi(args.hud_p2_roi, P2_HEALTH_N)
+            p1_poly_norm = _parse_poly(args.hud_p1_poly, P1_BAR_POLY_NORM)
+            p2_poly_norm = _parse_poly(args.hud_p2_poly, P2_BAR_POLY_NORM)
             tracker = HealthBarTracker(
                 p1_roi=p1_roi_norm,
                 p2_roi=p2_roi_norm,
@@ -355,6 +383,9 @@ def main() -> int:
         with mss.mss() as screen:  # type: ignore[attr-defined]
             monitor = screen.monitors[0]
             diagnostics_printed = False
+            roi_diag_px = None
+            roi_diag_mode = roi_mode
+            roi_diag_offset_px = None
             for episode_idx in range(args.episodes):
                 if stop_requested:
                     break
@@ -403,29 +434,46 @@ def main() -> int:
                         if rect_info.get("client_rect"):
                             print(f"CLIENT_RECT={rect_info['client_rect']}")
                         print(f"FRAME_SIZE={width}x{height}")
-                        if tracker is not None and p1_roi_norm and p2_roi_norm:
-                            p1_px = (
-                                int(p1_roi_norm[0] * width),
-                                int(p1_roi_norm[1] * height),
-                                int(p1_roi_norm[2] * width),
-                                int(p1_roi_norm[3] * height),
-                            )
-                            p2_px = (
-                                int(p2_roi_norm[0] * width),
-                                int(p2_roi_norm[1] * height),
-                                int(p2_roi_norm[2] * width),
-                                int(p2_roi_norm[3] * height),
-                            )
-                            print(f"P1_ROI_PX_PRE={p1_px}")
-                            print(f"P2_ROI_PX_PRE={p2_px}")
+                        if tracker is not None:
                             offset_px = args.hud_y_offset_px
                             if args.hud_y_offset_norm is not None:
                                 offset_px = int(args.hud_y_offset_norm * height)
-                            p1_post = _apply_y_offset(p1_px, frame_h=height, offset_px=offset_px)
-                            p2_post = _apply_y_offset(p2_px, frame_h=height, offset_px=offset_px)
                             print(f"HUD_Y_OFFSET_PX={offset_px}")
-                            print(f"P1_ROI_PX_POST={p1_post}")
-                            print(f"P2_ROI_PX_POST={p2_post}")
+                            roi_diag_offset_px = offset_px
+                            print(f"ROI_MODE={roi_mode}")
+                            if roi_mode == "rect" and p1_roi_norm and p2_roi_norm:
+                                p1_px = (
+                                    int(p1_roi_norm[0] * width),
+                                    int(p1_roi_norm[1] * height),
+                                    int(p1_roi_norm[2] * width),
+                                    int(p1_roi_norm[3] * height),
+                                )
+                                p2_px = (
+                                    int(p2_roi_norm[0] * width),
+                                    int(p2_roi_norm[1] * height),
+                                    int(p2_roi_norm[2] * width),
+                                    int(p2_roi_norm[3] * height),
+                                )
+                                print(f"P1_ROI_PX_PRE={p1_px}")
+                                print(f"P2_ROI_PX_PRE={p2_px}")
+                                p1_post = _apply_y_offset(p1_px, frame_h=height, offset_px=offset_px)
+                                p2_post = _apply_y_offset(p2_px, frame_h=height, offset_px=offset_px)
+                                print(f"P1_ROI_PX_POST={p1_post}")
+                                print(f"P2_ROI_PX_POST={p2_post}")
+                                roi_diag_px = {"p1": p1_post, "p2": p2_post}
+                            elif roi_mode == "poly" and p1_poly_norm and p2_poly_norm:
+                                p1_px = norm_poly_to_px(p1_poly_norm, width, height)
+                                p2_px = norm_poly_to_px(p2_poly_norm, width, height)
+                                if offset_px:
+                                    p1_px[:, 1] = p1_px[:, 1] + offset_px
+                                    p2_px[:, 1] = p2_px[:, 1] + offset_px
+                                p1_px[:, 1] = p1_px[:, 1].clip(0, height)
+                                p2_px[:, 1] = p2_px[:, 1].clip(0, height)
+                                p1_list = [tuple(int(v) for v in pt) for pt in p1_px.tolist()]
+                                p2_list = [tuple(int(v) for v in pt) for pt in p2_px.tolist()]
+                                print(f"P1_POLY_PX={p1_list}")
+                                print(f"P2_POLY_PX={p2_list}")
+                                roi_diag_px = {"p1": p1_list, "p2": p2_list}
 
                     screenshot_path = screenshots_dir / f"ep{episode_idx:03d}_step{step_idx:05d}.png"
                     _save_screenshot(frame, (width, height), screenshot_path)
@@ -452,44 +500,76 @@ def main() -> int:
                         from PIL import ImageDraw  # type: ignore
 
                         image = Image.frombytes("RGB", (width, height), frame)
-                        if args.hud_y_offset_px or args.hud_y_offset_norm is not None:
-                            offset_px = args.hud_y_offset_px
-                            if args.hud_y_offset_norm is not None:
-                                offset_px = int(args.hud_y_offset_norm * height)
-                            shifted = image.transform(
-                                image.size,
-                                Image.AFFINE,
-                                (1, 0, 0, 0, 1, -offset_px),
-                            )
-                            my_hp, enemy_hp = tracker.update(shifted)
-                        else:
-                            my_hp, enemy_hp = tracker.update(image)
                         offset_px = args.hud_y_offset_px
                         if args.hud_y_offset_norm is not None:
                             offset_px = int(args.hud_y_offset_norm * height)
-                        if args.debug_hud and (time.perf_counter() - last_debug) >= 1.0:
+                        if roi_mode == "poly" and p1_poly_norm and p2_poly_norm:
+                            my_hp = estimate_health_poly(
+                                image,
+                                p1_poly_norm,
+                                y_offset_px=offset_px,
+                            )
+                            enemy_hp = estimate_health_poly(
+                                image,
+                                p2_poly_norm,
+                                y_offset_px=offset_px,
+                            )
+                        else:
+                            if args.hud_y_offset_px or args.hud_y_offset_norm is not None:
+                                shifted = image.transform(
+                                    image.size,
+                                    Image.AFFINE,
+                                    (1, 0, 0, 0, 1, -offset_px),
+                                )
+                                my_hp, enemy_hp = tracker.update(shifted)
+                            else:
+                                my_hp, enemy_hp = tracker.update(image)
+                        offset_px = args.hud_y_offset_px
+                        if args.hud_y_offset_norm is not None:
+                            offset_px = int(args.hud_y_offset_norm * height)
+                        if args.debug_hud:
+                            should_save = step_idx in {1, 3} or (time.perf_counter() - last_debug) >= 1.0
+                        else:
+                            should_save = False
+                        if should_save:
                             draw = ImageDraw.Draw(image)
-                            p1 = tracker.p1_roi
-                            p2 = tracker.p2_roi
-                            p1_px = (
-                                int(p1[0] * width),
-                                int(p1[1] * height),
-                                int(p1[2] * width),
-                                int(p1[3] * height),
-                            )
-                            p2_px = (
-                                int(p2[0] * width),
-                                int(p2[1] * height),
-                                int(p2[2] * width),
-                                int(p2[3] * height),
-                            )
-                            p1_px = _apply_y_offset(p1_px, frame_h=height, offset_px=offset_px)
-                            p2_px = _apply_y_offset(p2_px, frame_h=height, offset_px=offset_px)
-                            draw.rectangle(p1_px, outline="red", width=2)
-                            draw.rectangle(p2_px, outline="red", width=2)
+                            if roi_mode == "poly" and p1_poly_norm and p2_poly_norm:
+                                p1_px = norm_poly_to_px(p1_poly_norm, width, height)
+                                p2_px = norm_poly_to_px(p2_poly_norm, width, height)
+                                if offset_px:
+                                    p1_px[:, 1] = p1_px[:, 1] + offset_px
+                                    p2_px[:, 1] = p2_px[:, 1] + offset_px
+                                p1_px[:, 1] = p1_px[:, 1].clip(0, height)
+                                p2_px[:, 1] = p2_px[:, 1].clip(0, height)
+                                p1_pts = [tuple(int(v) for v in pt) for pt in p1_px.tolist()]
+                                p2_pts = [tuple(int(v) for v in pt) for pt in p2_px.tolist()]
+                                if p1_pts:
+                                    draw.line(p1_pts + [p1_pts[0]], fill="red", width=2)
+                                if p2_pts:
+                                    draw.line(p2_pts + [p2_pts[0]], fill="red", width=2)
+                            else:
+                                p1 = tracker.p1_roi
+                                p2 = tracker.p2_roi
+                                p1_px = (
+                                    int(p1[0] * width),
+                                    int(p1[1] * height),
+                                    int(p1[2] * width),
+                                    int(p1[3] * height),
+                                )
+                                p2_px = (
+                                    int(p2[0] * width),
+                                    int(p2[1] * height),
+                                    int(p2[2] * width),
+                                    int(p2[3] * height),
+                                )
+                                p1_px = _apply_y_offset(p1_px, frame_h=height, offset_px=offset_px)
+                                p2_px = _apply_y_offset(p2_px, frame_h=height, offset_px=offset_px)
+                                draw.rectangle(p1_px, outline="red", width=2)
+                                draw.rectangle(p2_px, outline="red", width=2)
                             hud_path = hud_debug_dir / f"hud_ep{episode_idx:03d}_step{step_idx:05d}.png"
                             image.save(hud_path)
                             print(f"HUD p1={my_hp:.3f} p2={enemy_hp:.3f} step={step_idx}")
+                            print(f"WROTE_HUD_DEBUG={hud_path}")
                             last_debug = time.perf_counter()
 
                     if episode_health_start is None:
@@ -616,8 +696,15 @@ def main() -> int:
                     "pct_delta_gt_threshold": (delta_gt_count / max(1, step_idx)) * 100.0,
                 }
                 episode_summaries.append(summary)
+                payload = {"episodes": episode_summaries}
+                if roi_diag_mode:
+                    payload["roi_mode"] = roi_diag_mode
+                if roi_diag_px is not None:
+                    payload["roi_px"] = roi_diag_px
+                if roi_diag_offset_px is not None:
+                    payload["hud_y_offset_px"] = roi_diag_offset_px
                 summaries_path.write_text(
-                    json.dumps({"episodes": episode_summaries}, indent=2),
+                    json.dumps(payload, indent=2),
                     encoding="utf-8",
                 )
                 learner.save(policy_path)

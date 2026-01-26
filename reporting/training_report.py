@@ -31,9 +31,9 @@ def _load_jsonl(path: Path) -> List[Dict[str, Any]]:
     return records
 
 
-def _load_episode_summaries(path: Path) -> List[EpisodeSummary]:
+def _load_episode_summaries(path: Path) -> tuple[List[EpisodeSummary], dict]:
     if not path.exists():
-        return []
+        return [], {}
     payload = json.loads(path.read_text(encoding="utf-8"))
     summaries: List[EpisodeSummary] = []
     for item in payload.get("episodes", []):
@@ -44,7 +44,12 @@ def _load_episode_summaries(path: Path) -> List[EpisodeSummary]:
                 net_advantage=float(item.get("net_advantage", 0.0)),
             )
         )
-    return summaries
+    meta = {
+        "roi_mode": payload.get("roi_mode"),
+        "roi_px": payload.get("roi_px"),
+        "hud_y_offset_px": payload.get("hud_y_offset_px"),
+    }
+    return summaries, meta
 
 
 def _trend_slope(points: List[Tuple[int, float]]) -> float:
@@ -66,7 +71,7 @@ def generate_report(
     output_path: Path,
 ) -> None:
     transitions = _load_jsonl(transitions_path)
-    summaries = _load_episode_summaries(summaries_path)
+    summaries, meta = _load_episode_summaries(summaries_path)
 
     if summaries:
         avg_reward = mean(s.total_reward for s in summaries)
@@ -155,6 +160,12 @@ def generate_report(
     lines.append("## Summary")
     lines.append(f"- Episodes: {len(summaries)}")
     lines.append(f"- Average reward per episode: {avg_reward:.4f}")
+    if meta.get("roi_mode"):
+        lines.append(f"- ROI mode: {meta['roi_mode']}")
+    if meta.get("hud_y_offset_px") is not None:
+        lines.append(f"- HUD y-offset px: {meta['hud_y_offset_px']}")
+    if meta.get("roi_px"):
+        lines.append(f"- ROI px: {meta['roi_px']}")
     if screen_deltas:
         lines.append(f"- Avg screen delta: {mean(screen_deltas):.4f}")
         if delta_threshold is not None:

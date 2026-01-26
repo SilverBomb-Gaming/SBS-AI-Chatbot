@@ -21,6 +21,20 @@ except ImportError:  # pragma: no cover - environment specific
 P1_HEALTH_N = (0.078, 0.032, 0.479, 0.070)
 P2_HEALTH_N = (0.521, 0.032, 0.922, 0.070)
 
+P1_BAR_POLY_NORM = [
+    (0.080, 0.060),
+    (0.470, 0.060),
+    (0.455, 0.082),
+    (0.095, 0.082),
+]
+
+P2_BAR_POLY_NORM = [
+    (0.525, 0.060),
+    (0.915, 0.060),
+    (0.900, 0.082),
+    (0.540, 0.082),
+]
+
 DEFAULT_S_MIN = 80
 DEFAULT_V_MIN = 120
 DEFAULT_EMA_ALPHA = 0.2
@@ -66,6 +80,43 @@ def _filled_ratio(
         return 0.0
     filled = sum(1 for _, s, v in pixels if s >= s_min and v >= v_min)
     return filled / float(len(pixels))
+
+
+def norm_poly_to_px(poly: list[tuple[float, float]], width: int, height: int) -> "np.ndarray":
+    if np is None:
+        raise RuntimeError("numpy is required for polygon health extraction.")
+    return np.array([(int(x * width), int(y * height)) for x, y in poly], dtype=np.int32)
+
+
+def estimate_health_poly(
+    image: "Image.Image",
+    poly_norm: list[tuple[float, float]],
+    *,
+    s_min: int = DEFAULT_S_MIN,
+    v_min: int = DEFAULT_V_MIN,
+    y_offset_px: int = 0,
+) -> float:
+    if np is None:
+        raise RuntimeError("numpy is required for polygon health extraction.")
+    width, height = image.size
+    poly_px = norm_poly_to_px(poly_norm, width, height)
+    if y_offset_px:
+        poly_px[:, 1] = np.clip(poly_px[:, 1] + y_offset_px, 0, height)
+
+    mask = Image.new("L", (width, height), 0)
+    from PIL import ImageDraw  # type: ignore
+
+    ImageDraw.Draw(mask).polygon([tuple(p) for p in poly_px], outline=255, fill=255)
+    mask_np = np.array(mask)
+
+    hsv = np.array(image.convert("HSV"))
+    h = hsv[..., 0]
+    s = hsv[..., 1]
+    v = hsv[..., 2]
+    red = ((h < 10) | (h > 170)) & (s > s_min) & (v > v_min)
+    valid = red & (mask_np == 255)
+    total = (mask_np == 255).sum()
+    return float(valid.sum()) / float(total if total > 0 else 1)
 
 
 def extract_health(
