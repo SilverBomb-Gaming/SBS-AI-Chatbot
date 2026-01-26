@@ -1175,7 +1175,7 @@ def _execute_single_run(
         post_result,
         pending_path,
     )
-    success = post_result.success and result.status == "pass"
+    success = (post_result.success or post_result.skipped) and result.status == "pass"
     return record, success
 
 

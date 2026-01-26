@@ -329,7 +329,7 @@ def test_execute_single_run_writes_pending_when_post_skipped(
 
     record, success = run_unity._execute_single_run(env, "single", None, 1)
 
-    assert success is False
+    assert success is True
     assert record.pending_episode_path is not None
     assert record.pending_episode_path.exists()
 
