@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import random
 import signal
 import time
@@ -29,6 +30,10 @@ from agent.state import make_state
 from reporting.training_report import generate_report
 from runner.target_detect import lock_target
 from runner.capture import _find_window_rect  # type: ignore
+
+if os.name == "nt":  # pragma: no cover - Windows-only helpers
+    import ctypes
+    import ctypes.wintypes as wintypes
 
 
 def parse_args() -> argparse.Namespace:
@@ -98,6 +103,68 @@ def _save_screenshot(rgb_bytes: bytes, size: tuple, path: Path) -> None:
     mss_tools.to_png(rgb_bytes, size, output=str(path))  # type: ignore[arg-type]
 
 
+def _enable_dpi_awareness() -> str:
+    if os.name != "nt":
+        return "non-windows"
+    try:
+        user32 = ctypes.windll.user32
+        set_ctx = getattr(user32, "SetProcessDpiAwarenessContext", None)
+        if set_ctx:
+            DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = ctypes.c_void_p(-4)  # type: ignore[arg-type]
+            if set_ctx(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2):
+                return "per-monitor-v2"
+        set_aware = getattr(user32, "SetProcessDPIAware", None)
+        if set_aware and set_aware():
+            return "system-aware"
+    except Exception:
+        return "failed"
+    return "unknown"
+
+
+def _get_client_rect(hwnd: int) -> Optional[Tuple[int, int, int, int]]:
+    if os.name != "nt" or not hwnd:
+        return None
+    try:
+        user32 = ctypes.windll.user32
+        rect = wintypes.RECT()
+        if not user32.GetClientRect(hwnd, ctypes.byref(rect)):
+            return None
+        point = wintypes.POINT(0, 0)
+        if not user32.ClientToScreen(hwnd, ctypes.byref(point)):
+            return None
+        left = point.x
+        top = point.y
+        width = rect.right - rect.left
+        height = rect.bottom - rect.top
+        return (left, top, left + width, top + height)
+    except Exception:
+        return None
+
+
+def _capture_region_for_target(hwnd: Optional[int], capture_mode: str) -> Tuple[dict, dict]:
+    window_rect = _find_window_rect(hwnd) if hwnd and capture_mode == "window" else None
+    client_rect = _get_client_rect(hwnd) if hwnd and capture_mode == "window" else None
+    if capture_mode == "window" and client_rect:
+        left, top, right, bottom = client_rect
+        region = {
+            "left": left,
+            "top": top,
+            "width": max(0, right - left),
+            "height": max(0, bottom - top),
+        }
+        return region, {"window_rect": window_rect, "client_rect": client_rect}
+    if capture_mode == "window" and window_rect:
+        left, top, right, bottom = window_rect
+        region = {
+            "left": left,
+            "top": top,
+            "width": max(0, right - left),
+            "height": max(0, bottom - top),
+        }
+        return region, {"window_rect": window_rect, "client_rect": client_rect}
+    return {}, {"window_rect": window_rect, "client_rect": client_rect}
+
+
 def _parse_roi(raw: str, fallback: Tuple[float, float, float, float]) -> Tuple[float, float, float, float]:
     if not raw:
         return fallback
@@ -165,6 +232,8 @@ def main() -> int:
     if mss is None:
         raise SystemExit("mss is required for screenshot capture.")
 
+    dpi_status = _enable_dpi_awareness()
+
     run_ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     run_root = Path("training_runs") / run_ts
     screenshots_dir = (
@@ -221,6 +290,7 @@ def main() -> int:
     if not lock:
         raise SystemExit(f"Target lock failed for {args.target_exe}.")
     target_pid = lock.info.pid if lock.info else None
+    target_hwnd = lock.info.hwnd if lock.info else None
 
     metadata_dir = run_root / "metadata"
     metadata_dir.mkdir(parents=True, exist_ok=True)
@@ -264,6 +334,7 @@ def main() -> int:
     try:
         with mss.mss() as screen:  # type: ignore[attr-defined]
             monitor = screen.monitors[0]
+            diagnostics_printed = False
             for episode_idx in range(args.episodes):
                 if stop_requested:
                     break
@@ -291,10 +362,44 @@ def main() -> int:
                         break
                     now = time.perf_counter()
                     t_run = now - episode_start
-                    capture_region = _capture_region(target_pid, args.capture_mode)
+                    capture_region, rect_info = _capture_region_for_target(
+                        target_hwnd, args.capture_mode
+                    )
                     shot = screen.grab(capture_region or monitor)
                     width, height = shot.size
                     frame = shot.rgb
+
+                    if not diagnostics_printed:
+                        diagnostics_printed = True
+                        print(f"CAPTURE_MODE={args.capture_mode}")
+                        print(f"DPI_AWARE={dpi_status}")
+                        print(
+                            f"MONITOR_SIZE={monitor.get('width')}x{monitor.get('height')}"
+                        )
+                        if target_hwnd:
+                            print(f"TARGET_HWND={target_hwnd}")
+                        if rect_info.get("window_rect"):
+                            print(f"WINDOW_RECT={rect_info['window_rect']}")
+                        if rect_info.get("client_rect"):
+                            print(f"CLIENT_RECT={rect_info['client_rect']}")
+                        print(f"FRAME_SIZE={width}x{height}")
+                        if tracker is not None:
+                            p1 = tracker.p1_roi
+                            p2 = tracker.p2_roi
+                            p1_px = (
+                                int(p1[0] * width),
+                                int(p1[1] * height),
+                                int(p1[2] * width),
+                                int(p1[3] * height),
+                            )
+                            p2_px = (
+                                int(p2[0] * width),
+                                int(p2[1] * height),
+                                int(p2[2] * width),
+                                int(p2[3] * height),
+                            )
+                            print(f"P1_ROI_PX={p1_px}")
+                            print(f"P2_ROI_PX={p2_px}")
 
                     screenshot_path = screenshots_dir / f"ep{episode_idx:03d}_step{step_idx:05d}.png"
                     _save_screenshot(frame, (width, height), screenshot_path)
