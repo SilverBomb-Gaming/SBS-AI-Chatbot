@@ -57,6 +57,7 @@ class RunReportRow:
     target_exe_path: str | None = None
     target_process_name: str | None = None
     target_window_title: str | None = None
+    target_change_count: int = 0
 
     def pass_fail(self) -> str:
         posted_ok = self.episode_post_success or bool(self.episode_post_skipped_reason)
@@ -311,6 +312,8 @@ def _format_target_lines(row: RunReportRow) -> List[str]:
         lines.append(f"  - HWND: {row.target_hwnd}")
     if row.target_window_title:
         lines.append(f"  - Window title: {row.target_window_title}")
+    if row.target_change_count:
+        lines.append(f"  - Target changes observed: {row.target_change_count}")
     return lines
 
 

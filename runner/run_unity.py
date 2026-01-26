@@ -66,7 +66,6 @@ from runner.target_detect import (
     TargetInfo,
     detect_foreground_target,
     sanitize_name,
-    short_title_hash,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -133,6 +132,7 @@ class RunResult:
     target_exe_path: str | None = None
     target_process_name: str | None = None
     target_window_title: str | None = None
+    target_change_count: int = 0
 
 
 def _slugify(value: str) -> str:
@@ -141,18 +141,12 @@ def _slugify(value: str) -> str:
     return slug or "run"
 
 
-def _generate_run_identifier(
-    config: RunnerConfig, target: TargetInfo | None = None
-) -> str:
+def _generate_run_identifier(config: RunnerConfig) -> str:
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     project_slug = _slugify(config.project_name)
     build_slug = _slugify(config.build_id)
     base = f"{timestamp}_{config.run_mode}_{project_slug}_{build_slug}"
-    if not target:
-        return base
-    exe_slug = sanitize_name(target.process_name or "unknown")
-    title_hash = short_title_hash(target.window_title or "")
-    return f"{base}_{exe_slug}_{title_hash}"
+    return f"{base}_pending-target"
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -244,6 +238,24 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Observe only (human mode) without launching Unity",
     )
     parser.add_argument(
+        "--target-mode",
+        choices=["foreground-at-start", "first-non-terminal", "exe"],
+        help="Target selection strategy for foreground app detection",
+    )
+    parser.add_argument(
+        "--target-lock-seconds",
+        type=int,
+        help="Seconds to wait for target selection during lock window",
+    )
+    parser.add_argument(
+        "--target-ignore",
+        help="Comma-separated exe names to ignore during target selection",
+    )
+    parser.add_argument(
+        "--target-exe",
+        help="EXE name or full path to lock onto when --target-mode=exe",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable verbose runner logging and faulthandler",
@@ -284,6 +296,14 @@ def apply_cli_overrides(args: argparse.Namespace) -> None:
         env["RUNNER_INPUT_AXIS_EPSILON"] = str(args.input_axis_epsilon)
     if getattr(args, "no_launch", None):
         env["RUNNER_NO_LAUNCH"] = "1"
+    if getattr(args, "target_mode", None):
+        env["RUNNER_TARGET_MODE"] = args.target_mode
+    if getattr(args, "target_lock_seconds", None) is not None:
+        env["RUNNER_TARGET_LOCK_SECONDS"] = str(args.target_lock_seconds)
+    if getattr(args, "target_ignore", None):
+        env["RUNNER_TARGET_IGNORE"] = args.target_ignore
+    if getattr(args, "target_exe", None):
+        env["RUNNER_TARGET_EXE"] = args.target_exe
     if getattr(args, "debug", None):
         env["RUNNER_DEBUG"] = "1"
 
@@ -306,24 +326,17 @@ def _configure_logging(debug: bool, stderr_log: Path | None = None) -> None:
     logging.basicConfig(level=level, format=LOG_FORMAT, handlers=handlers)
 
 
-def _generate_preflight_identifier(
-    env: Mapping[str, str], target: TargetInfo | None = None
-) -> str:
+def _generate_preflight_identifier(env: Mapping[str, str]) -> str:
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     run_mode = _slugify(env.get("RUN_MODE", "unknown"))
     project = _slugify(env.get("PROJECT_NAME", "unknown"))
     build = _slugify(env.get("BUILD_ID", "unknown"))
     base = f"{timestamp}_{run_mode}_{project}_{build}"
-    if not target:
-        return base
-    exe_slug = sanitize_name(target.process_name or "unknown")
-    title_hash = short_title_hash(target.window_title or "")
-    return f"{base}_{exe_slug}_{title_hash}"
+    return f"{base}_pending-target"
 
 
 def _prepare_artifacts(env: Mapping[str, str]) -> ArtifactPaths | None:
-    target = detect_foreground_target()
-    run_id = _generate_preflight_identifier(env, target)
+    run_id = _generate_preflight_identifier(env)
     try:
         artifacts = create_artifact_paths(DEFAULT_ARTIFACTS_DIR, run_id)
     except OSError as exc:
@@ -415,6 +428,7 @@ class _TargetWatcher:
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
         self._last: TargetInfo | None = None
+        self._change_count = 0
 
     def start(self, initial: TargetInfo | None) -> None:
         self._last = initial
@@ -428,13 +442,17 @@ class _TargetWatcher:
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=2)
 
+    @property
+    def change_count(self) -> int:
+        return self._change_count
+
     def _loop(self) -> None:
         while not self._stop_event.is_set():
             current = detect_foreground_target()
             if _target_changed(self._last, current):
                 self._last = current
+                self._change_count += 1
                 self._log_target_event("target_changed", current)
-                _write_target_metadata(self._artifacts, current)
             if self._stop_event.wait(self._interval_seconds):
                 return
 
@@ -463,6 +481,43 @@ def _format_target_message(target: TargetInfo | None) -> str:
         f"pid={target.pid} hwnd={target.hwnd} "
         f"exe={target.exe_path} title={target.window_title}"
     )
+
+
+def _lock_canonical_target(
+    config: RunnerConfig, event_logger: EventLogger
+) -> TargetInfo | None:
+    initial = detect_foreground_target()
+    event_logger.log("target_detected", _format_target_message(initial))
+
+    mode = (config.target_mode or "").strip().lower()
+    if mode == "foreground-at-start":
+        event_logger.log("target_locked", _format_target_message(initial))
+        return initial
+
+    lock_seconds = max(1, config.target_lock_seconds)
+    ignore_set = {value.strip().lower() for value in config.target_ignore if value}
+    target_exe = (config.target_exe or "").strip().lower()
+
+    deadline = time.monotonic() + lock_seconds
+    interval = 0.25
+    while time.monotonic() < deadline:
+        candidate = detect_foreground_target()
+        if mode == "exe" and candidate:
+            exe_name = (candidate.process_name or "").lower()
+            exe_path = (candidate.exe_path or "").lower()
+            if target_exe and (exe_name == target_exe or exe_path == target_exe):
+                event_logger.log("target_locked", _format_target_message(candidate))
+                return candidate
+        elif mode == "first-non-terminal" and candidate:
+            exe_name = (candidate.process_name or "").lower()
+            if exe_name and exe_name not in ignore_set:
+                event_logger.log("target_locked", _format_target_message(candidate))
+                return candidate
+        time.sleep(interval)
+
+    fallback = initial
+    event_logger.log("target_lock_fallback", _format_target_message(fallback))
+    return fallback
 
 
 def ensure_capture_mode_selection(env: MutableMapping[str, str]) -> None:
@@ -890,24 +945,21 @@ def execute_run(
     artifact_paths: ArtifactPaths | None = None,
     popen_cls=subprocess.Popen,
 ) -> RunResult:
-    target = detect_foreground_target()
     run_identifier = (
-        artifact_paths.run_id
-        if artifact_paths
-        else _generate_run_identifier(config, target)
+        artifact_paths.run_id if artifact_paths else _generate_run_identifier(config)
     )
     artifacts = artifact_paths or create_artifact_paths(
         config.artifacts_root, run_identifier
     )
     LOGGER.info("Artifacts stored in %s", artifacts.run_dir)
     event_logger = EventLogger(artifacts.events_log)
-    _write_target_metadata(artifacts, target)
-    event_logger.log("target_detected", _format_target_message(target))
+    canonical_target = _lock_canonical_target(config, event_logger)
+    _write_target_metadata(artifacts, canonical_target)
     target_watcher = _TargetWatcher(event_logger, artifacts)
-    target_watcher.start(target)
+    target_watcher.start(canonical_target)
     prefix = "screenshot"
-    if target and target.process_name:
-        prefix = f"{sanitize_name(target.process_name)}_screenshot"
+    if canonical_target and canonical_target.process_name:
+        prefix = f"{sanitize_name(canonical_target.process_name)}_screenshot"
     recorder = ScreenshotRecorder(
         config.screenshot_interval_seconds,
         artifacts,
@@ -1063,11 +1115,12 @@ def execute_run(
         input_events=input_summary.events_captured,
         input_log_path=input_summary.log_path,
         input_warnings=input_summary.warnings,
-        target_hwnd=target.hwnd if target else None,
-        target_pid=target.pid if target else None,
-        target_exe_path=target.exe_path if target else None,
-        target_process_name=target.process_name if target else None,
-        target_window_title=target.window_title if target else None,
+        target_hwnd=canonical_target.hwnd if canonical_target else None,
+        target_pid=canonical_target.pid if canonical_target else None,
+        target_exe_path=canonical_target.exe_path if canonical_target else None,
+        target_process_name=canonical_target.process_name if canonical_target else None,
+        target_window_title=canonical_target.window_title if canonical_target else None,
+        target_change_count=target_watcher.change_count,
     )
 
 
@@ -1524,6 +1577,7 @@ def _build_run_record(
         target_exe_path=result.target_exe_path,
         target_process_name=result.target_process_name,
         target_window_title=result.target_window_title,
+        target_change_count=result.target_change_count,
     )
 
 
