@@ -129,6 +129,7 @@ def main() -> int:
     summaries_path = run_root / "episode_summaries.json"
 
     policy_path = Path(args.policy_path)
+    policy_path.parent.mkdir(parents=True, exist_ok=True)
     learner = QLearner.load(policy_path)
 
     if args.debug_buttons:
@@ -358,11 +359,15 @@ def main() -> int:
         if args.report_path
         else Path("reports") / f"training_report_{run_ts}.md"
     )
+    report_path.parent.mkdir(parents=True, exist_ok=True)
     generate_report(
         transitions_path=transitions_path,
         summaries_path=summaries_path,
         output_path=report_path,
     )
+    print(f"RUN_DIR={run_root.resolve()}")
+    print(f"WROTE_POLICY={policy_path.resolve()}")
+    print(f"WROTE_REPORT={report_path.resolve()}")
     return 0
 
 
