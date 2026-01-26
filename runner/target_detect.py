@@ -108,7 +108,7 @@ def lock_target(
     mode: str,
     lock_seconds: int,
     poll_ms: int,
-    ignore_processes: Iterable[str],
+    ignore_processes: Iterable[str] | None,
     explicit_exe: str | None = None,
     explicit_exe_path: str | None = None,
     logger: Callable[[str, str | None], None] | None = None,
@@ -248,8 +248,11 @@ def _matches_explicit(
     return bool(exe_path and path and path == exe_path)
 
 
-def _build_ignore_set(values: Iterable[str]) -> set[str]:
-    normalized = {value.strip().lower() for value in values if value}
+def _build_ignore_set(values: Iterable[str] | None) -> set[str]:
+    if not values:
+        normalized: set[str] = set()
+    else:
+        normalized = {value.strip().lower() for value in values if value}
     normalized.update(SELF_EXE_NAMES)
     return normalized
 

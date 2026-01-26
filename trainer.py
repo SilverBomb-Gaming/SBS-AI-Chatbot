@@ -25,7 +25,6 @@ from agent.q_learner import QLearner
 from agent.reward import DEFAULT_IDLE_PENALTY, compute_reward, net_advantage
 from agent.state import make_state
 from reporting.training_report import generate_report
-from runner.health_bar import HealthBarTracker
 from runner.target_detect import lock_target
 from runner.capture import _find_window_rect  # type: ignore
 
@@ -44,6 +43,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--capture-mode", choices=["desktop", "window"], default="desktop")
     parser.add_argument("--screenshot-dir", default="")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--no-vision", action="store_true")
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--idle-penalty", type=float, default=DEFAULT_IDLE_PENALTY)
     return parser.parse_args()
@@ -119,7 +119,14 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    tracker = HealthBarTracker()
+    tracker = None
+    if not args.no_vision:
+        try:
+            from runner.health_bar import HealthBarTracker
+
+            tracker = HealthBarTracker()
+        except Exception as exc:
+            raise SystemExit(f"Health bar extraction unavailable: {exc}")
     gamepad = vg.VX360Gamepad()
 
     legal_actions = action_names()
@@ -163,10 +170,13 @@ def main() -> int:
                     screenshot_path = screenshots_dir / f"ep{episode_idx:03d}_step{step_idx:05d}.png"
                     _save_screenshot(frame, (width, height), screenshot_path)
 
-                    from PIL import Image  # type: ignore
+                    my_hp = 1.0
+                    enemy_hp = 1.0
+                    if tracker is not None:
+                        from PIL import Image  # type: ignore
 
-                    image = Image.frombytes("RGB", (width, height), frame)
-                    my_hp, enemy_hp = tracker.update(image)
+                        image = Image.frombytes("RGB", (width, height), frame)
+                        my_hp, enemy_hp = tracker.update(image)
 
                     if episode_health_start is None:
                         episode_health_start = (my_hp, enemy_hp)
@@ -174,7 +184,7 @@ def main() -> int:
                     reward = 0.0
                     delta_enemy = 0.0
                     delta_me = 0.0
-                    if prev_health is not None:
+                    if prev_health is not None and tracker is not None:
                         reward, delta_enemy, delta_me = compute_reward(
                             enemy_prev=prev_health["enemy"],
                             enemy_now=enemy_hp,

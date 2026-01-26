@@ -127,6 +127,20 @@ Defaults:
 - action_hold_ticks: 6
 - reward = (damage dealt) − (damage taken) − idle_penalty
 
+Safe install (wheels only, avoids source builds on Python 3.13):
+
+```
+.\tools\install_safe.ps1
+```
+
+If a package has no wheel, use Python 3.12 as the stable runner environment.
+
+No-vision mode (runs even if Pillow/Numpy are not available):
+
+```
+python .\trainer.py --episodes 2 --episode-seconds 15 --decision-hz 10 --no-vision
+```
+
 Troubleshooting:
 - Disable Steam Input if SF6 ignores injected input.
 - Unplug physical controllers to avoid conflicts.
