@@ -45,6 +45,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-vision", action="store_true")
     parser.add_argument("--debug-buttons", action="store_true")
+    parser.add_argument(
+        "--keep-controller-alive-seconds",
+        type=float,
+        default=0.0,
+        help="Create a virtual controller, pulse A once, then sleep for N seconds before exit.",
+    )
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--idle-penalty", type=float, default=DEFAULT_IDLE_PENALTY)
     return parser.parse_args()
@@ -97,6 +103,21 @@ def main() -> int:
         for name in sorted(button_names):
             print(f"- {name}")
 
+    gamepad = vg.VX360Gamepad()
+    if args.keep_controller_alive_seconds > 0:
+        try:
+            gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+            gamepad.update()
+            time.sleep(0.1)
+            gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+            gamepad.update()
+            time.sleep(args.keep_controller_alive_seconds)
+        finally:
+            release_all(gamepad)
+            time.sleep(0.25)
+            release_all(gamepad)
+        return 0
+
     lock = lock_target(
         mode="exe",
         lock_seconds=args.target_lock_seconds,
@@ -134,8 +155,6 @@ def main() -> int:
             tracker = HealthBarTracker()
         except Exception as exc:
             raise SystemExit(f"Health bar extraction unavailable: {exc}")
-    gamepad = vg.VX360Gamepad()
-
     legal_actions = action_names()
     episode_summaries = []
     stop_requested = False
