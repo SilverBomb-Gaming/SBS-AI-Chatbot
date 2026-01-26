@@ -46,6 +46,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-vision", action="store_true")
     parser.add_argument("--debug-buttons", action="store_true")
     parser.add_argument(
+        "--force-action",
+        help=(
+            "Force a single button each tick (bypasses policy). "
+            "Examples: DPAD_RIGHT, DPAD_LEFT, DPAD_UP, DPAD_DOWN, A, B, X, Y, "
+            "START, BACK, LB, RB, LTHUMB, RTHUMB"
+        ),
+    )
+    parser.add_argument(
         "--keep-controller-alive-seconds",
         type=float,
         default=0.0,
@@ -72,6 +80,32 @@ def _save_screenshot(rgb_bytes: bytes, size: tuple, path: Path) -> None:
     if mss_tools is None:
         return
     mss_tools.to_png(rgb_bytes, size, output=str(path))  # type: ignore[arg-type]
+
+
+def _resolve_force_button(name: str | None) -> vg.XUSB_BUTTON | None:
+    if not name:
+        return None
+    key = name.strip().upper()
+    mapping = {
+        "DPAD_RIGHT": "XUSB_GAMEPAD_DPAD_RIGHT",
+        "DPAD_LEFT": "XUSB_GAMEPAD_DPAD_LEFT",
+        "DPAD_UP": "XUSB_GAMEPAD_DPAD_UP",
+        "DPAD_DOWN": "XUSB_GAMEPAD_DPAD_DOWN",
+        "A": "XUSB_GAMEPAD_A",
+        "B": "XUSB_GAMEPAD_B",
+        "X": "XUSB_GAMEPAD_X",
+        "Y": "XUSB_GAMEPAD_Y",
+        "START": "XUSB_GAMEPAD_START",
+        "BACK": "XUSB_GAMEPAD_BACK",
+        "LB": "XUSB_GAMEPAD_LEFT_SHOULDER",
+        "RB": "XUSB_GAMEPAD_RIGHT_SHOULDER",
+        "LTHUMB": "XUSB_GAMEPAD_LEFT_THUMB",
+        "RTHUMB": "XUSB_GAMEPAD_RIGHT_THUMB",
+    }
+    attr = mapping.get(key)
+    if not attr:
+        return None
+    return getattr(vg.XUSB_BUTTON, attr, None)
 
 
 def main() -> int:
@@ -117,6 +151,10 @@ def main() -> int:
             time.sleep(0.25)
             release_all(gamepad)
         return 0
+
+    force_button = _resolve_force_button(args.force_action)
+    if args.force_action and force_button is None:
+        raise SystemExit(f"Unknown --force-action '{args.force_action}'.")
 
     lock = lock_target(
         mode="exe",
@@ -221,26 +259,38 @@ def main() -> int:
 
                     state = make_state(my_hp, enemy_hp, t_run, prev_action, args.episode_seconds)
 
-                    if hold_remaining <= 0:
-                        action_name = learner.select_action(state, legal_actions)
-                        current_action = get_action(action_name)
-                        hold_remaining = args.action_hold_ticks
-                        action_started = True
+                    if force_button is not None:
+                        action_name = args.force_action.strip().upper()
+                        if not args.dry_run:
+                            gamepad.press_button(button=force_button)
+                            gamepad.update()
+                            time.sleep(0.1)
+                            gamepad.release_button(button=force_button)
+                            gamepad.update()
+                        if step_idx % max(1, int(args.decision_hz)) == 0:
+                            print(f"FORCE_ACTION={action_name} step={step_idx}")
                     else:
-                        action_name = current_action.name
-                        action_started = False
-
-                    if not args.dry_run:
-                        if current_action.tap and action_started:
-                            apply_action(gamepad, current_action)
-                            release_all(gamepad)
-                        elif current_action.tap:
-                            release_all(gamepad)
+                        if hold_remaining <= 0:
+                            action_name = learner.select_action(state, legal_actions)
+                            current_action = get_action(action_name)
+                            hold_remaining = args.action_hold_ticks
+                            action_started = True
                         else:
-                            apply_action(gamepad, current_action)
+                            action_name = current_action.name
+                            action_started = False
+
+                        if not args.dry_run:
+                            if current_action.tap and action_started:
+                                apply_action(gamepad, current_action)
+                                release_all(gamepad)
+                            elif current_action.tap:
+                                release_all(gamepad)
+                            else:
+                                apply_action(gamepad, current_action)
 
                     next_state = make_state(my_hp, enemy_hp, t_run, action_name, args.episode_seconds)
-                    learner.update(state, action_name, reward, next_state, legal_actions)
+                    if force_button is None:
+                        learner.update(state, action_name, reward, next_state, legal_actions)
 
                     record = {
                         "ts_utc": datetime.now(timezone.utc).isoformat(),
