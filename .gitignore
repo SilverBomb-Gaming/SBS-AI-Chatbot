@@ -20,3 +20,6 @@ reports/
 # Run handoff zips
 handoff_*.zip
 /handoffs/
+
+# Training artifacts
+training_runs/

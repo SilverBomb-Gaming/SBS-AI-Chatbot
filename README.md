@@ -114,6 +114,27 @@ python .\tools\agent_loop.py --duration 60 --decision-hz 12 --action-seconds 0.1
 
 ---
 
+## 🧠 Training Loop Quickstart
+
+Closed-loop trainer (observe → decide → act → reward → learn):
+
+```
+python .\trainer.py --episodes 10 --episode-seconds 30 --decision-hz 10
+```
+
+Defaults:
+- decision_hz: 10 (not 60)
+- action_hold_ticks: 6
+- reward = (damage dealt) − (damage taken) − idle_penalty
+
+Troubleshooting:
+- Disable Steam Input if SF6 ignores injected input.
+- Unplug physical controllers to avoid conflicts.
+- Run as Admin if injection is blocked.
+- Ensure SF6 is focused and target-locked to `StreetFighter6.exe`.
+
+---
+
 ## 🧠 What’s Next
 
 We are no longer solving plumbing problems.
