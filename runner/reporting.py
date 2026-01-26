@@ -52,6 +52,11 @@ class RunReportRow:
     input_events_captured: int = 0
     input_log_path: Path | None = None
     input_warnings: List[str] = field(default_factory=list)
+    target_hwnd: int | None = None
+    target_pid: int | None = None
+    target_exe_path: str | None = None
+    target_process_name: str | None = None
+    target_window_title: str | None = None
 
     def pass_fail(self) -> str:
         posted_ok = self.episode_post_success or bool(self.episode_post_skipped_reason)
@@ -157,14 +162,18 @@ def render_report(summary: PlanReportSummary) -> str:
 
     if summary.runs:
         lines.append(
-            "| # | Scenario | Mode | Status | Exit | Duration (s) | Episode | Screenshots | Marks |"
+            "| # | Scenario | Mode | Status | Exit | Duration (s) | Episode | Screenshots | Marks | Target EXE | Window Title |"
         )
-        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+        lines.append(
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+        )
         for row in summary.runs:
             episode_cell = _format_episode_cell(row)
             screenshot_cell = _format_screenshot_cell(row)
+            target_exe = row.target_process_name or _short_exe(row.target_exe_path)
+            target_title = row.target_window_title or "-"
             lines.append(
-                "| {index} | {scenario} | {mode} | {status} | {exit} | {duration:.2f} | {episode} | {shots} | {marks} |".format(
+                "| {index} | {scenario} | {mode} | {status} | {exit} | {duration:.2f} | {episode} | {shots} | {marks} | {exe} | {title} |".format(
                     index=row.index,
                     scenario=row.scenario_id or "(none)",
                     mode=row.mode,
@@ -174,6 +183,8 @@ def render_report(summary: PlanReportSummary) -> str:
                     episode=episode_cell,
                     shots=screenshot_cell,
                     marks=row.events_mark_count,
+                    exe=target_exe or "-",
+                    title=target_title or "-",
                 )
             )
         lines.append("")
@@ -192,6 +203,7 @@ def render_report(summary: PlanReportSummary) -> str:
         lines.append(f"- Duration: {row.runtime_seconds:.2f}s")
         lines.append(f"- Screenshot target: {row.screenshot_target}")
         lines.append(f"- Capture mode: {row.capture_mode}")
+        lines.extend(_format_target_lines(row))
         if row.launch_skipped:
             reason = row.launch_reason or "observe-only"
             lines.append(f"- Launch: SKIPPED ({reason})")
@@ -278,3 +290,31 @@ def _format_input_logging_lines(row: RunReportRow) -> List[str]:
         for warning in row.input_warnings:
             lines.append(f"  - {warning}")
     return lines
+
+
+def _format_target_lines(row: RunReportRow) -> List[str]:
+    if (
+        row.target_hwnd is None
+        and row.target_pid is None
+        and not row.target_exe_path
+        and not row.target_window_title
+    ):
+        return []
+    lines = ["- Target App:"]
+    if row.target_exe_path:
+        lines.append(f"  - Exe: {row.target_exe_path}")
+    elif row.target_process_name:
+        lines.append(f"  - Exe: {row.target_process_name}")
+    if row.target_pid is not None:
+        lines.append(f"  - PID: {row.target_pid}")
+    if row.target_hwnd is not None:
+        lines.append(f"  - HWND: {row.target_hwnd}")
+    if row.target_window_title:
+        lines.append(f"  - Window title: {row.target_window_title}")
+    return lines
+
+
+def _short_exe(path_value: str | None) -> str | None:
+    if not path_value:
+        return None
+    return Path(path_value).name or None

@@ -62,6 +62,12 @@ from runner.input_capture.controller_logger import (
     InputLoggingSummary,
     resolve_backend_factory,
 )
+from runner.target_detect import (
+    TargetInfo,
+    detect_foreground_target,
+    sanitize_name,
+    short_title_hash,
+)
 
 LOGGER = logging.getLogger(__name__)
 LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
@@ -122,6 +128,11 @@ class RunResult:
     input_events: int = 0
     input_log_path: Path | None = None
     input_warnings: List[str] | None = None
+    target_hwnd: int | None = None
+    target_pid: int | None = None
+    target_exe_path: str | None = None
+    target_process_name: str | None = None
+    target_window_title: str | None = None
 
 
 def _slugify(value: str) -> str:
@@ -130,11 +141,18 @@ def _slugify(value: str) -> str:
     return slug or "run"
 
 
-def _generate_run_identifier(config: RunnerConfig) -> str:
+def _generate_run_identifier(
+    config: RunnerConfig, target: TargetInfo | None = None
+) -> str:
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     project_slug = _slugify(config.project_name)
     build_slug = _slugify(config.build_id)
-    return f"{timestamp}_{config.run_mode}_{project_slug}_{build_slug}"
+    base = f"{timestamp}_{config.run_mode}_{project_slug}_{build_slug}"
+    if not target:
+        return base
+    exe_slug = sanitize_name(target.process_name or "unknown")
+    title_hash = short_title_hash(target.window_title or "")
+    return f"{base}_{exe_slug}_{title_hash}"
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -288,16 +306,24 @@ def _configure_logging(debug: bool, stderr_log: Path | None = None) -> None:
     logging.basicConfig(level=level, format=LOG_FORMAT, handlers=handlers)
 
 
-def _generate_preflight_identifier(env: Mapping[str, str]) -> str:
+def _generate_preflight_identifier(
+    env: Mapping[str, str], target: TargetInfo | None = None
+) -> str:
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     run_mode = _slugify(env.get("RUN_MODE", "unknown"))
     project = _slugify(env.get("PROJECT_NAME", "unknown"))
     build = _slugify(env.get("BUILD_ID", "unknown"))
-    return f"{timestamp}_{run_mode}_{project}_{build}"
+    base = f"{timestamp}_{run_mode}_{project}_{build}"
+    if not target:
+        return base
+    exe_slug = sanitize_name(target.process_name or "unknown")
+    title_hash = short_title_hash(target.window_title or "")
+    return f"{base}_{exe_slug}_{title_hash}"
 
 
 def _prepare_artifacts(env: Mapping[str, str]) -> ArtifactPaths | None:
-    run_id = _generate_preflight_identifier(env)
+    target = detect_foreground_target()
+    run_id = _generate_preflight_identifier(env, target)
     try:
         artifacts = create_artifact_paths(DEFAULT_ARTIFACTS_DIR, run_id)
     except OSError as exc:
@@ -354,6 +380,89 @@ def _write_failure_details(
         LOGGER.warning(
             "Unable to write runner stderr log %s: %s", artifacts.stderr_log, log_exc
         )
+
+
+def _write_target_metadata(artifacts: ArtifactPaths, target: TargetInfo | None) -> None:
+    metadata_dir = artifacts.run_dir / "metadata"
+    metadata_dir.mkdir(parents=True, exist_ok=True)
+    payload: Dict[str, Any] = {}
+    if target:
+        payload = {
+            "hwnd": target.hwnd,
+            "pid": target.pid,
+            "exe_path": target.exe_path,
+            "process_name": target.process_name,
+            "window_title": target.window_title,
+        }
+    destination = metadata_dir / "target_process.json"
+    try:
+        destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    except OSError as exc:  # pragma: no cover - filesystem safety
+        LOGGER.warning("Unable to write target metadata: %s", exc)
+
+
+class _TargetWatcher:
+    def __init__(
+        self,
+        event_logger: EventLogger,
+        artifacts: ArtifactPaths,
+        *,
+        interval_seconds: float = 0.5,
+    ) -> None:
+        self._event_logger = event_logger
+        self._artifacts = artifacts
+        self._interval_seconds = interval_seconds
+        self._stop_event = threading.Event()
+        self._thread: threading.Thread | None = None
+        self._last: TargetInfo | None = None
+
+    def start(self, initial: TargetInfo | None) -> None:
+        self._last = initial
+        self._thread = threading.Thread(
+            target=self._loop, name="runner-target-watch", daemon=True
+        )
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._stop_event.set()
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=2)
+
+    def _loop(self) -> None:
+        while not self._stop_event.is_set():
+            current = detect_foreground_target()
+            if _target_changed(self._last, current):
+                self._last = current
+                self._log_target_event("target_changed", current)
+                _write_target_metadata(self._artifacts, current)
+            if self._stop_event.wait(self._interval_seconds):
+                return
+
+    def _log_target_event(self, event: str, target: TargetInfo | None) -> None:
+        message = _format_target_message(target)
+        self._event_logger.log(event, message)
+
+
+def _target_changed(previous: TargetInfo | None, current: TargetInfo | None) -> bool:
+    if previous is None and current is None:
+        return False
+    if previous is None or current is None:
+        return True
+    return (
+        previous.hwnd != current.hwnd
+        or previous.pid != current.pid
+        or previous.exe_path != current.exe_path
+        or previous.window_title != current.window_title
+    )
+
+
+def _format_target_message(target: TargetInfo | None) -> str:
+    if not target:
+        return "target missing"
+    return (
+        f"pid={target.pid} hwnd={target.hwnd} "
+        f"exe={target.exe_path} title={target.window_title}"
+    )
 
 
 def ensure_capture_mode_selection(env: MutableMapping[str, str]) -> None:
@@ -687,6 +796,18 @@ def build_episode_payload(config: RunnerConfig, result: RunResult) -> dict:
     if result.input_warnings:
         metrics["input_logging"]["warnings"] = list(result.input_warnings)
 
+    target_payload: Dict[str, Any] = {}
+    if result.target_pid is not None:
+        target_payload["pid"] = result.target_pid
+    if result.target_hwnd is not None:
+        target_payload["hwnd"] = result.target_hwnd
+    if result.target_exe_path:
+        target_payload["exe_path"] = result.target_exe_path
+    if result.target_process_name:
+        target_payload["process_name"] = result.target_process_name
+    if result.target_window_title:
+        target_payload["window_title"] = result.target_window_title
+
     payload: Dict[str, Any] = {
         "source": "unity-runner",
         "mode": config.run_mode,
@@ -694,6 +815,7 @@ def build_episode_payload(config: RunnerConfig, result: RunResult) -> dict:
         "project": config.project_name,
         "build_id": config.build_id,
         "metrics": metrics,
+        "target": target_payload,
         "artifacts": {
             "logs": logs,
             "screenshots": screenshots,
@@ -768,20 +890,31 @@ def execute_run(
     artifact_paths: ArtifactPaths | None = None,
     popen_cls=subprocess.Popen,
 ) -> RunResult:
+    target = detect_foreground_target()
     run_identifier = (
-        artifact_paths.run_id if artifact_paths else _generate_run_identifier(config)
+        artifact_paths.run_id
+        if artifact_paths
+        else _generate_run_identifier(config, target)
     )
     artifacts = artifact_paths or create_artifact_paths(
         config.artifacts_root, run_identifier
     )
     LOGGER.info("Artifacts stored in %s", artifacts.run_dir)
     event_logger = EventLogger(artifacts.events_log)
+    _write_target_metadata(artifacts, target)
+    event_logger.log("target_detected", _format_target_message(target))
+    target_watcher = _TargetWatcher(event_logger, artifacts)
+    target_watcher.start(target)
+    prefix = "screenshot"
+    if target and target.process_name:
+        prefix = f"{sanitize_name(target.process_name)}_screenshot"
     recorder = ScreenshotRecorder(
         config.screenshot_interval_seconds,
         artifacts,
         config.screenshot_max_captures,
         capture_mode=config.capture_mode,
         event_logger=event_logger,
+        filename_prefix=prefix,
     )
     input_logger: ControllerLogger | None = None
     input_summary = InputLoggingSummary.disabled("per config")
@@ -896,6 +1029,7 @@ def execute_run(
         error_message = str(exc)
         LOGGER.exception("Unity process failed: %s", exc)
     finally:
+        target_watcher.stop()
         recorder.stop()
         if hotkeys:
             hotkeys.stop()
@@ -929,6 +1063,11 @@ def execute_run(
         input_events=input_summary.events_captured,
         input_log_path=input_summary.log_path,
         input_warnings=input_summary.warnings,
+        target_hwnd=target.hwnd if target else None,
+        target_pid=target.pid if target else None,
+        target_exe_path=target.exe_path if target else None,
+        target_process_name=target.process_name if target else None,
+        target_window_title=target.window_title if target else None,
     )
 
 
@@ -1380,6 +1519,11 @@ def _build_run_record(
         input_events_captured=result.input_events,
         input_log_path=result.input_log_path,
         input_warnings=result.input_warnings or [],
+        target_hwnd=result.target_hwnd,
+        target_pid=result.target_pid,
+        target_exe_path=result.target_exe_path,
+        target_process_name=result.target_process_name,
+        target_window_title=result.target_window_title,
     )
 
 
