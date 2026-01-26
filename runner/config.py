@@ -30,6 +30,7 @@ ALLOWED_INPUT_BACKENDS = {"auto", "xinput", "stub"}
 DEFAULT_INPUT_BACKEND = "auto"
 DEFAULT_TARGET_MODE = "first-non-terminal"
 DEFAULT_TARGET_LOCK_SECONDS = 10
+DEFAULT_TARGET_POLL_MS = 250
 DEFAULT_TARGET_IGNORE = [
     "powershell.exe",
     "windowsterminal.exe",
@@ -46,7 +47,9 @@ DEFAULT_TARGET_IGNORE = [
     "lockapp.exe",
     "dwm.exe",
 ]
-ALLOWED_TARGET_MODES = {"foreground-at-start", "first-non-terminal", "exe"}
+ALLOWED_TARGET_MODES = {"foreground-at-start", "first-non-terminal", "exe", "foreground", "explicit"}
+DEFAULT_INPUT_STATE_HZ = 0
+DEFAULT_INPUT_STATE_FORMAT = "jsonl"
 BASE_URL_ENV_KEYS = ("AI_E_BASE_URL", "API_BASE_URL", "SERVER_URL")
 PLACEHOLDER_BASE_HOSTS = {"example.com", "www.example.com"}
 
@@ -85,8 +88,13 @@ class RunnerConfig:
     input_backend: str = DEFAULT_INPUT_BACKEND
     target_mode: str = DEFAULT_TARGET_MODE
     target_lock_seconds: int = DEFAULT_TARGET_LOCK_SECONDS
+    target_poll_ms: int = DEFAULT_TARGET_POLL_MS
     target_ignore: tuple[str, ...] = tuple(DEFAULT_TARGET_IGNORE)
     target_exe: str | None = None
+    target_exe_path: str | None = None
+    input_state_hz: int = DEFAULT_INPUT_STATE_HZ
+    input_state_format: str = DEFAULT_INPUT_STATE_FORMAT
+    input_state_raw: bool = True
 
     def episodes_endpoint(self) -> str:
         if not self.ai_e_base_url:
@@ -193,8 +201,36 @@ def load_runner_config(env: Mapping[str, str] | None = None) -> RunnerConfig:
         env.get("RUNNER_TARGET_LOCK_SECONDS"), "RUNNER_TARGET_LOCK_SECONDS"
     )
     target_lock_seconds = lock_override or DEFAULT_TARGET_LOCK_SECONDS
+    poll_override = _parse_optional_positive_int(
+        env.get("RUNNER_TARGET_POLL_MS"), "RUNNER_TARGET_POLL_MS"
+    )
+    target_poll_ms = poll_override or DEFAULT_TARGET_POLL_MS
     target_ignore = _parse_target_ignore(env.get("RUNNER_TARGET_IGNORE"))
     target_exe = _optional_string(env.get("RUNNER_TARGET_EXE"))
+    target_exe_path = _optional_string(env.get("RUNNER_TARGET_EXE_PATH"))
+    state_hz_override = _parse_optional_non_negative_int(
+        env.get("RUNNER_INPUT_STATE_HZ"), "RUNNER_INPUT_STATE_HZ"
+    )
+    input_state_hz = (
+        state_hz_override
+        if state_hz_override is not None
+        else DEFAULT_INPUT_STATE_HZ
+    )
+    state_format = (
+        _optional_string(env.get("RUNNER_INPUT_STATE_FORMAT"))
+        or DEFAULT_INPUT_STATE_FORMAT
+    ).strip().lower()
+    if state_format not in {"jsonl"}:
+        LOGGER.warning(
+            "Invalid RUNNER_INPUT_STATE_FORMAT '%s'; falling back to %s",
+            state_format,
+            DEFAULT_INPUT_STATE_FORMAT,
+        )
+        state_format = DEFAULT_INPUT_STATE_FORMAT
+    state_raw_flag = _parse_optional_bool(
+        env.get("RUNNER_INPUT_STATE_RAW"), "RUNNER_INPUT_STATE_RAW"
+    )
+    input_state_raw = True if state_raw_flag is None else state_raw_flag
 
     return RunnerConfig(
         unity_executable=unity_path,
@@ -221,8 +257,13 @@ def load_runner_config(env: Mapping[str, str] | None = None) -> RunnerConfig:
         input_backend=input_backend,
         target_mode=target_mode,
         target_lock_seconds=target_lock_seconds,
+        target_poll_ms=target_poll_ms,
         target_ignore=target_ignore,
         target_exe=target_exe,
+        target_exe_path=target_exe_path,
+        input_state_hz=input_state_hz,
+        input_state_format=state_format,
+        input_state_raw=input_state_raw,
     )
 
 
@@ -478,6 +519,11 @@ def _parse_target_mode(raw_value: str | None) -> str:
     if not raw_value or not raw_value.strip():
         return DEFAULT_TARGET_MODE
     candidate = raw_value.strip().lower()
+    alias_map = {
+        "foreground": "foreground-at-start",
+        "explicit": "exe",
+    }
+    candidate = alias_map.get(candidate, candidate)
     if candidate not in ALLOWED_TARGET_MODES:
         allowed = ", ".join(sorted(ALLOWED_TARGET_MODES))
         raise RunnerConfigError(f"RUNNER_TARGET_MODE must be one of: {allowed}")

@@ -52,12 +52,22 @@ class RunReportRow:
     input_events_captured: int = 0
     input_log_path: Path | None = None
     input_warnings: List[str] = field(default_factory=list)
+    input_state_status: str = "OFF"
+    input_state_message: str | None = None
+    input_state_frames: int = 0
+    input_state_log_path: Path | None = None
+    input_state_effective_hz: float = 0.0
+    input_state_target_hz: int = 0
+    input_state_expected_frames: int = 0
+    input_state_warnings: List[str] = field(default_factory=list)
     target_hwnd: int | None = None
     target_pid: int | None = None
     target_exe_path: str | None = None
     target_process_name: str | None = None
     target_window_title: str | None = None
     target_change_count: int = 0
+    target_label: str | None = None
+    target_label_hash: str | None = None
 
     def pass_fail(self) -> str:
         posted_ok = self.episode_post_success or bool(self.episode_post_skipped_reason)
@@ -290,18 +300,30 @@ def _format_input_logging_lines(row: RunReportRow) -> List[str]:
         lines.append("- Input warnings:")
         for warning in row.input_warnings:
             lines.append(f"  - {warning}")
+    dense_line = f"- Dense input stream: {row.input_state_status}"
+    if row.input_state_message:
+        dense_line += f" ({row.input_state_message})"
+    dense_line += f"; frames: {row.input_state_frames}"
+    if row.input_state_target_hz:
+        dense_line += f", target: {row.input_state_target_hz}Hz"
+    if row.input_state_effective_hz:
+        dense_line += f", effective: {row.input_state_effective_hz:.2f}Hz"
+    if row.input_state_log_path:
+        dense_line += f", log: {row.input_state_log_path}"
+    lines.append(dense_line)
+    if row.input_state_warnings:
+        lines.append("- Dense input warnings:")
+        for warning in row.input_state_warnings:
+            lines.append(f"  - {warning}")
     return lines
 
 
 def _format_target_lines(row: RunReportRow) -> List[str]:
-    if (
-        row.target_hwnd is None
-        and row.target_pid is None
-        and not row.target_exe_path
-        and not row.target_window_title
-    ):
-        return []
     lines = ["- Target App:"]
+    if row.target_label:
+        lines.append(f"  - Label: {row.target_label}")
+    if row.target_label_hash:
+        lines.append(f"  - Label hash: {row.target_label_hash}")
     if row.target_exe_path:
         lines.append(f"  - Exe: {row.target_exe_path}")
     elif row.target_process_name:
@@ -314,6 +336,8 @@ def _format_target_lines(row: RunReportRow) -> List[str]:
         lines.append(f"  - Window title: {row.target_window_title}")
     if row.target_change_count:
         lines.append(f"  - Target changes observed: {row.target_change_count}")
+    if len(lines) == 1:
+        lines.append("  - details unavailable")
     return lines
 
 

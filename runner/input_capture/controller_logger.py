@@ -49,6 +49,32 @@ class InputLoggingSummary:
 
 
 @dataclass
+class ControllerStateStreamSummary:
+    """Dense controller state logging summary."""
+
+    status: str
+    message: str
+    frames: int = 0
+    log_path: Path | None = None
+    warnings: List[str] = field(default_factory=list)
+    effective_hz: float = 0.0
+    expected_frames: int = 0
+    target_hz: int = 0
+
+    @classmethod
+    def disabled(
+        cls, reason: str, *, log_path: Path | None = None
+    ) -> "ControllerStateStreamSummary":
+        return cls(status=STATUS_OFF, message=reason, log_path=log_path)
+
+    @classmethod
+    def skipped(
+        cls, reason: str, warnings: List[str] | None = None
+    ) -> "ControllerStateStreamSummary":
+        return cls(status=STATUS_SKIPPED, message=reason, warnings=list(warnings or []))
+
+
+@dataclass
 class BackendControllerState:
     """Represents the instantaneous state of a controller device."""
 
@@ -333,6 +359,216 @@ class ControllerLogger:
                 self._log_handle.write(line + "\n")
                 self._log_handle.flush()
         self._events_captured += 1
+
+    def _log_runner_event(self, event_type: str, message: str | None) -> None:
+        if self.event_logger:
+            self.event_logger.log(event_type, message)
+
+
+class ControllerStateStreamLogger:
+    """Fixed-rate controller state sampler for dense datasets."""
+
+    def __init__(
+        self,
+        log_path: Path,
+        *,
+        hz: int,
+        fmt: str,
+        raw: bool,
+        deadzone: float,
+        event_logger: EventLogger | None = None,
+        backend_factory: Callable[[], ControllerBackend] | None = None,
+    ) -> None:
+        self.log_path = log_path
+        self.hz = max(0, hz)
+        self.format = (fmt or "jsonl").strip().lower()
+        self.raw = bool(raw)
+        self.deadzone = 0.0 if self.raw else max(0.0, deadzone)
+        self.event_logger = event_logger
+        self._backend_factory = backend_factory or _default_backend_factory
+        self._backend: ControllerBackend | None = None
+        self._thread: threading.Thread | None = None
+        self._stop_event = threading.Event()
+        self._log_handle = None
+        self._status = STATUS_OFF
+        self._message = "dense stream disabled"
+        self._warnings: List[str] = []
+        self._frames = 0
+        self._run_started_at: float | None = None
+        self._run_stopped_at: float | None = None
+
+    def start(self) -> bool:
+        if self.hz <= 0:
+            return False
+        if self.format not in {"jsonl"}:
+            warning = f"dense input format '{self.format}' not supported; using jsonl"
+            self._warnings.append(warning)
+            self.format = "jsonl"
+        try:
+            self._backend = self._backend_factory()
+            self._backend.initialize()
+        except ControllerBackendUnavailable as exc:
+            reason = str(exc) or "dense controller backend unavailable"
+            self._status = STATUS_SKIPPED
+            self._message = reason
+            self._warnings.append(reason)
+            self._log_runner_event("controller_state_stream_error", reason)
+            return False
+        except Exception as exc:  # pragma: no cover - defensive
+            reason = f"dense controller backend failed: {exc}"
+            LOGGER.warning(reason)
+            self._status = STATUS_SKIPPED
+            self._message = reason
+            self._warnings.append(reason)
+            self._log_runner_event("controller_state_stream_error", reason)
+            return False
+
+        self.log_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            self._log_handle = self.log_path.open("a", encoding="utf-8")
+        except OSError as exc:
+            reason = f"unable to open dense controller log: {exc}"
+            LOGGER.warning(reason)
+            self._status = STATUS_SKIPPED
+            self._message = reason
+            self._warnings.append(reason)
+            self._log_runner_event("controller_state_stream_error", reason)
+            return False
+
+        self._stop_event.clear()
+        self._run_started_at = time.perf_counter()
+        self._status = STATUS_ON
+        self._message = f"controller state stream running at {self.hz}Hz"
+        self._log_runner_event(
+            "controller_state_stream_start",
+            f"dense controller stream started: {self.log_path} ({self.hz}Hz)",
+        )
+        self._thread = threading.Thread(
+            target=self._run_loop,
+            name="controller-state-stream",
+            daemon=True,
+        )
+        self._thread.start()
+        return True
+
+    def stop(self) -> None:
+        self._stop_event.set()
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=2)
+        if self._backend:
+            try:
+                self._backend.shutdown()
+            except Exception:  # pragma: no cover - defensive cleanup
+                LOGGER.debug("Dense controller backend shutdown raised", exc_info=True)
+        if self._log_handle:
+            self._log_handle.close()
+            self._log_handle = None
+        self._run_stopped_at = time.perf_counter()
+        if self._status == STATUS_ON:
+            self._log_runner_event(
+                "controller_state_stream_stop",
+                f"frames={self._frames}",
+            )
+
+    def summary(self) -> ControllerStateStreamSummary:
+        duration = 0.0
+        if self._run_started_at and self._run_stopped_at:
+            duration = max(0.0, self._run_stopped_at - self._run_started_at)
+        expected_frames = int(round(duration * self.hz)) if self.hz and duration else 0
+        effective_hz = (self._frames / duration) if duration and self._frames else 0.0
+        log_path = self.log_path if self.log_path.exists() else None
+        return ControllerStateStreamSummary(
+            status=self._status,
+            message=self._message,
+            frames=self._frames,
+            log_path=log_path,
+            warnings=list(self._warnings),
+            effective_hz=round(effective_hz, 3),
+            expected_frames=expected_frames,
+            target_hz=self.hz,
+        )
+
+    def _run_loop(self) -> None:
+        assert self._backend is not None
+        interval = 1.0 / max(1, self.hz)
+        next_tick = time.perf_counter()
+        try:
+            while not self._stop_event.is_set():
+                states = self._backend.read()
+                self._write_frame(states)
+                next_tick += interval
+                delay = max(0.0, next_tick - time.perf_counter())
+                if self._stop_event.wait(delay):
+                    break
+        except Exception as exc:  # pragma: no cover - defensive
+            reason = f"dense controller stream failed: {exc}"
+            LOGGER.exception("Dense controller state streamer crashed")
+            self._warnings.append(reason)
+            self._status = STATUS_SKIPPED
+            self._message = reason
+            self._log_runner_event("controller_state_stream_error", reason)
+
+    def _write_frame(self, states: Dict[str, BackendControllerState]) -> None:
+        if not self._log_handle or self._run_started_at is None:
+            return
+        now = time.perf_counter()
+        t_run = round(now - self._run_started_at, 6)
+        devices = self._serialize_devices(states)
+        payload = {
+            "ts_utc": datetime.now(timezone.utc).isoformat(),
+            "t_run_s": t_run,
+            "devices": devices,
+        }
+        line = json.dumps(payload, separators=(",", ":"))
+        self._log_handle.write(line + "\n")
+        self._log_handle.flush()
+        self._frames += 1
+
+    def _serialize_devices(
+        self, states: Dict[str, BackendControllerState]
+    ) -> List[Dict[str, object]]:
+        devices: List[Dict[str, object]] = []
+        for device_id in sorted(states.keys()):
+            state = states[device_id]
+            devices.append(
+                {
+                    "id": state.device_id,
+                    "index": state.index,
+                    "name": state.name,
+                    "axes": self._axes_payload(state),
+                    "buttons": self._buttons_payload(state),
+                    "dpad": self._dpad_payload(state),
+                }
+            )
+        return devices
+
+    def _axes_payload(self, state: BackendControllerState) -> Dict[str, float]:
+        axes: Dict[str, float] = {}
+        for control in ("LS_X", "LS_Y", "RS_X", "RS_Y", "LT", "RT"):
+            value = float(state.axes.get(control, 0.0))
+            axes[control] = self._normalize_axis(value)
+        return axes
+
+    def _buttons_payload(self, state: BackendControllerState) -> Dict[str, int]:
+        buttons: Dict[str, int] = {}
+        for control in ("A", "B", "X", "Y", "LB", "RB", "BACK", "START", "LS", "RS"):
+            buttons[control] = int(state.buttons.get(control, 0))
+        return buttons
+
+    def _dpad_payload(self, state: BackendControllerState) -> Dict[str, int]:
+        x = int(state.hats.get("DPAD_X", 0))
+        y = int(state.hats.get("DPAD_Y", 0))
+        return {
+            "up": 1 if y > 0 else 0,
+            "down": 1 if y < 0 else 0,
+            "left": 1 if x < 0 else 0,
+            "right": 1 if x > 0 else 0,
+        }
+
+    def _normalize_axis(self, value: float) -> float:
+        if not self.raw and abs(value) < self.deadzone:
+            return 0.0
+        return round(value, 6)
 
     def _log_runner_event(self, event_type: str, message: str | None) -> None:
         if self.event_logger:

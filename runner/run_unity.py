@@ -59,12 +59,17 @@ from runner.hotkeys import (
 )
 from runner.input_capture.controller_logger import (
     ControllerLogger,
+    ControllerStateStreamLogger,
+    ControllerStateStreamSummary,
     InputLoggingSummary,
     resolve_backend_factory,
 )
 from runner.target_detect import (
+    LockedTarget,
     TargetInfo,
     detect_foreground_target,
+    format_target_message,
+    lock_target,
     sanitize_name,
 )
 
@@ -127,12 +132,22 @@ class RunResult:
     input_events: int = 0
     input_log_path: Path | None = None
     input_warnings: List[str] | None = None
+    input_state_status: str = "OFF"
+    input_state_message: str | None = None
+    input_state_frames: int = 0
+    input_state_log_path: Path | None = None
+    input_state_warnings: List[str] | None = None
+    input_state_effective_hz: float | None = None
+    input_state_target_hz: int | None = None
+    input_state_expected_frames: int | None = None
     target_hwnd: int | None = None
     target_pid: int | None = None
     target_exe_path: str | None = None
     target_process_name: str | None = None
     target_window_title: str | None = None
     target_change_count: int = 0
+    target_label: str | None = None
+    target_label_hash: str | None = None
 
 
 def _slugify(value: str) -> str:
@@ -147,6 +162,18 @@ def _generate_run_identifier(config: RunnerConfig) -> str:
     build_slug = _slugify(config.build_id)
     base = f"{timestamp}_{config.run_mode}_{project_slug}_{build_slug}"
     return f"{base}_pending-target"
+
+
+def _apply_target_label_to_run_id(
+    run_id: str, lock: LockedTarget | None
+) -> str:
+    if not lock:
+        return run_id
+    suffix = lock.label_token
+    base = run_id
+    if base.endswith("_pending-target"):
+        base = base[: -len("_pending-target")]
+    return f"{base}_{suffix}"
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -213,6 +240,21 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Minimum change before axis events are logged (0-1)",
     )
     parser.add_argument(
+        "--input-state-hz",
+        type=int,
+        help="Dense controller state sampling rate in Hz (0 disables)",
+    )
+    parser.add_argument(
+        "--input-state-format",
+        help="Dense controller state output format (jsonl)",
+    )
+    parser.add_argument(
+        "--input-state-raw",
+        type=int,
+        choices=[0, 1],
+        help="Set to 1 to log raw values without deadzones (default)",
+    )
+    parser.add_argument(
         "--every-minutes",
         type=int,
         help="Schedule interval in minutes for --plan schedule",
@@ -248,12 +290,21 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Seconds to wait for target selection during lock window",
     )
     parser.add_argument(
+        "--target-poll-ms",
+        type=int,
+        help="Polling interval (ms) while acquiring a target",
+    )
+    parser.add_argument(
         "--target-ignore",
         help="Comma-separated exe names to ignore during target selection",
     )
     parser.add_argument(
         "--target-exe",
         help="EXE name or full path to lock onto when --target-mode=exe",
+    )
+    parser.add_argument(
+        "--target-exe-path",
+        help="Explicit executable path to lock onto when --target-mode=exe",
     )
     parser.add_argument(
         "--debug",
@@ -294,16 +345,26 @@ def apply_cli_overrides(args: argparse.Namespace) -> None:
         env["RUNNER_INPUT_DEADZONE"] = str(args.input_deadzone)
     if getattr(args, "input_axis_epsilon", None) is not None:
         env["RUNNER_INPUT_AXIS_EPSILON"] = str(args.input_axis_epsilon)
+    if getattr(args, "input_state_hz", None) is not None:
+        env["RUNNER_INPUT_STATE_HZ"] = str(args.input_state_hz)
+    if getattr(args, "input_state_format", None):
+        env["RUNNER_INPUT_STATE_FORMAT"] = args.input_state_format
+    if getattr(args, "input_state_raw", None) is not None:
+        env["RUNNER_INPUT_STATE_RAW"] = str(args.input_state_raw)
     if getattr(args, "no_launch", None):
         env["RUNNER_NO_LAUNCH"] = "1"
     if getattr(args, "target_mode", None):
         env["RUNNER_TARGET_MODE"] = args.target_mode
     if getattr(args, "target_lock_seconds", None) is not None:
         env["RUNNER_TARGET_LOCK_SECONDS"] = str(args.target_lock_seconds)
+    if getattr(args, "target_poll_ms", None) is not None:
+        env["RUNNER_TARGET_POLL_MS"] = str(args.target_poll_ms)
     if getattr(args, "target_ignore", None):
         env["RUNNER_TARGET_IGNORE"] = args.target_ignore
     if getattr(args, "target_exe", None):
         env["RUNNER_TARGET_EXE"] = args.target_exe
+    if getattr(args, "target_exe_path", None):
+        env["RUNNER_TARGET_EXE_PATH"] = args.target_exe_path
     if getattr(args, "debug", None):
         env["RUNNER_DEBUG"] = "1"
 
@@ -395,17 +456,23 @@ def _write_failure_details(
         )
 
 
-def _write_target_metadata(artifacts: ArtifactPaths, target: TargetInfo | None) -> None:
+def _write_target_metadata(artifacts: ArtifactPaths, target: LockedTarget | None) -> None:
     metadata_dir = artifacts.run_dir / "metadata"
     metadata_dir.mkdir(parents=True, exist_ok=True)
     payload: Dict[str, Any] = {}
     if target:
         payload = {
-            "hwnd": target.hwnd,
-            "pid": target.pid,
-            "exe_path": target.exe_path,
-            "process_name": target.process_name,
-            "window_title": target.window_title,
+            "hwnd": target.info.hwnd,
+            "pid": target.info.pid,
+            "exe_path": target.info.exe_path,
+            "process_name": target.info.process_name,
+            "window_title": target.info.window_title,
+            "locked_at_utc": target.locked_at.isoformat(),
+            "target_mode": target.mode,
+            "lock_seconds": target.lock_seconds,
+            "target_poll_ms": target.poll_ms,
+            "label": target.label,
+            "label_hash": target.hash_suffix,
         }
     destination = metadata_dir / "target_process.json"
     try:
@@ -457,7 +524,7 @@ class _TargetWatcher:
                 return
 
     def _log_target_event(self, event: str, target: TargetInfo | None) -> None:
-        message = _format_target_message(target)
+        message = format_target_message(target)
         self._event_logger.log(event, message)
 
 
@@ -472,70 +539,6 @@ def _target_changed(previous: TargetInfo | None, current: TargetInfo | None) -> 
         or previous.exe_path != current.exe_path
         or previous.window_title != current.window_title
     )
-
-
-def _format_target_message(target: TargetInfo | None) -> str:
-    if not target:
-        return "target missing"
-    return (
-        f"pid={target.pid} hwnd={target.hwnd} "
-        f"exe={target.exe_path} title={target.window_title}"
-    )
-
-
-def _lock_canonical_target(
-    config: RunnerConfig, event_logger: EventLogger
-) -> TargetInfo | None:
-    initial = detect_foreground_target()
-    event_logger.log("target_detected", _format_target_message(initial))
-
-    mode = (config.target_mode or "").strip().lower()
-    if mode == "foreground-at-start":
-        event_logger.log("target_locked", _format_target_message(initial))
-        return initial
-
-    lock_seconds = max(1, config.target_lock_seconds)
-    ignore_set = {value.strip().lower() for value in config.target_ignore if value}
-    target_exe = (config.target_exe or "").strip().lower()
-    ignore_titles = {"task switching", "program manager", ""}
-
-    deadline = time.monotonic() + lock_seconds
-    interval = 0.25
-    stable_target: TargetInfo | None = None
-    stable_count = 0
-    while time.monotonic() < deadline:
-        candidate = detect_foreground_target()
-        title = (candidate.window_title or "").strip().lower() if candidate else ""
-        if candidate and title in ignore_titles:
-            candidate = None
-        if mode == "exe" and candidate:
-            exe_name = (candidate.process_name or "").lower()
-            exe_path = (candidate.exe_path or "").lower()
-            if target_exe and (exe_name == target_exe or exe_path == target_exe):
-                if _target_changed(stable_target, candidate):
-                    stable_target = candidate
-                    stable_count = 1
-                else:
-                    stable_count += 1
-                if stable_count >= 3:
-                    event_logger.log("target_locked", _format_target_message(candidate))
-                    return candidate
-        elif mode == "first-non-terminal" and candidate:
-            exe_name = (candidate.process_name or "").lower()
-            if exe_name and exe_name not in ignore_set:
-                if _target_changed(stable_target, candidate):
-                    stable_target = candidate
-                    stable_count = 1
-                else:
-                    stable_count += 1
-                if stable_count >= 3:
-                    event_logger.log("target_locked", _format_target_message(candidate))
-                    return candidate
-        time.sleep(interval)
-
-    fallback = initial
-    event_logger.log("target_lock_fallback", _format_target_message(fallback))
-    return fallback
 
 
 def ensure_capture_mode_selection(env: MutableMapping[str, str]) -> None:
@@ -868,6 +871,18 @@ def build_episode_payload(config: RunnerConfig, result: RunResult) -> dict:
         metrics["input_logging"]["log_path"] = str(result.input_log_path)
     if result.input_warnings:
         metrics["input_logging"]["warnings"] = list(result.input_warnings)
+    metrics["input_state_stream"] = {
+        "status": result.input_state_status,
+        "message": result.input_state_message,
+        "frames": result.input_state_frames,
+        "target_hz": result.input_state_target_hz,
+        "effective_hz": result.input_state_effective_hz,
+        "expected_frames": result.input_state_expected_frames,
+    }
+    if result.input_state_log_path:
+        metrics["input_state_stream"]["log_path"] = str(result.input_state_log_path)
+    if result.input_state_warnings:
+        metrics["input_state_stream"]["warnings"] = list(result.input_state_warnings)
 
     target_payload: Dict[str, Any] = {}
     if result.target_pid is not None:
@@ -880,6 +895,10 @@ def build_episode_payload(config: RunnerConfig, result: RunResult) -> dict:
         target_payload["process_name"] = result.target_process_name
     if result.target_window_title:
         target_payload["window_title"] = result.target_window_title
+    if result.target_label:
+        target_payload["label"] = result.target_label
+    if result.target_label_hash:
+        target_payload["label_hash"] = result.target_label_hash
 
     payload: Dict[str, Any] = {
         "source": "unity-runner",
@@ -971,12 +990,27 @@ def execute_run(
     )
     LOGGER.info("Artifacts stored in %s", artifacts.run_dir)
     event_logger = EventLogger(artifacts.events_log)
-    canonical_target = _lock_canonical_target(config, event_logger)
-    _write_target_metadata(artifacts, canonical_target)
+    lock_result = lock_target(
+        mode=config.target_mode,
+        lock_seconds=config.target_lock_seconds,
+        poll_ms=config.target_poll_ms,
+        ignore_processes=config.target_ignore,
+        explicit_exe=config.target_exe,
+        explicit_exe_path=config.target_exe_path,
+        logger=event_logger.log,
+    )
+    canonical_target = lock_result.info if lock_result else None
+    finalized_run_id = _apply_target_label_to_run_id(artifacts.run_id, lock_result)
+    if finalized_run_id != artifacts.run_id:
+        artifacts.update_run_id(finalized_run_id)
+        event_logger.log_path = artifacts.events_log
+    _write_target_metadata(artifacts, lock_result)
     target_watcher = _TargetWatcher(event_logger, artifacts)
     target_watcher.start(canonical_target)
     prefix = "screenshot"
-    if canonical_target and canonical_target.process_name:
+    if lock_result:
+        prefix = f"{lock_result.label}_screenshot"
+    elif canonical_target and canonical_target.process_name:
         prefix = f"{sanitize_name(canonical_target.process_name)}_screenshot"
     recorder = ScreenshotRecorder(
         config.screenshot_interval_seconds,
@@ -1004,6 +1038,29 @@ def execute_run(
             input_logger = None
     elif config.inputs_mode != "off" and config.run_mode != "human":
         input_summary = InputLoggingSummary.disabled("non-human mode")
+
+    state_logger: ControllerStateStreamLogger | None = None
+    state_summary = ControllerStateStreamSummary.disabled("per config")
+    if config.input_state_hz > 0 and config.run_mode == "human":
+        dense_path = artifacts.dense_input_path(
+            config.input_state_hz, config.input_state_format
+        )
+        state_logger = ControllerStateStreamLogger(
+            dense_path,
+            hz=config.input_state_hz,
+            fmt=config.input_state_format,
+            raw=config.input_state_raw,
+            deadzone=config.input_deadzone,
+            event_logger=event_logger,
+            backend_factory=resolve_backend_factory(config.input_backend),
+        )
+        if state_logger.start():
+            state_summary = state_logger.summary()
+        else:
+            state_summary = state_logger.summary()
+            state_logger = None
+    elif config.input_state_hz > 0 and config.run_mode != "human":
+        state_summary = ControllerStateStreamSummary.disabled("non-human mode")
 
     hotkeys: HotkeyListener | None = None
     terminal_commands: TerminalCommandController | None = None
@@ -1108,6 +1165,9 @@ def execute_run(
         if input_logger:
             input_logger.stop()
             input_summary = input_logger.summary()
+        if state_logger:
+            state_logger.stop()
+            state_summary = state_logger.summary()
     finished_at = datetime.now(timezone.utc)
     runtime = round(time.monotonic() - start, 2)
     status = determine_status(exit_code, error_message)
@@ -1133,12 +1193,22 @@ def execute_run(
         input_events=input_summary.events_captured,
         input_log_path=input_summary.log_path,
         input_warnings=input_summary.warnings,
+        input_state_status=state_summary.status,
+        input_state_message=state_summary.message,
+        input_state_frames=state_summary.frames,
+        input_state_log_path=state_summary.log_path,
+        input_state_warnings=state_summary.warnings,
+        input_state_effective_hz=state_summary.effective_hz,
+        input_state_target_hz=state_summary.target_hz,
+        input_state_expected_frames=state_summary.expected_frames,
         target_hwnd=canonical_target.hwnd if canonical_target else None,
         target_pid=canonical_target.pid if canonical_target else None,
         target_exe_path=canonical_target.exe_path if canonical_target else None,
         target_process_name=canonical_target.process_name if canonical_target else None,
         target_window_title=canonical_target.window_title if canonical_target else None,
         target_change_count=target_watcher.change_count,
+        target_label=lock_result.label if lock_result else None,
+        target_label_hash=lock_result.hash_suffix if lock_result else None,
     )
 
 
@@ -1590,12 +1660,22 @@ def _build_run_record(
         input_events_captured=result.input_events,
         input_log_path=result.input_log_path,
         input_warnings=result.input_warnings or [],
+        input_state_status=result.input_state_status,
+        input_state_message=result.input_state_message,
+        input_state_frames=result.input_state_frames,
+        input_state_log_path=result.input_state_log_path,
+        input_state_effective_hz=result.input_state_effective_hz or 0.0,
+        input_state_target_hz=result.input_state_target_hz or 0,
+        input_state_expected_frames=result.input_state_expected_frames or 0,
+        input_state_warnings=result.input_state_warnings or [],
         target_hwnd=result.target_hwnd,
         target_pid=result.target_pid,
         target_exe_path=result.target_exe_path,
         target_process_name=result.target_process_name,
         target_window_title=result.target_window_title,
         target_change_count=result.target_change_count,
+        target_label=result.target_label,
+        target_label_hash=result.target_label_hash,
     )
 
 
@@ -1657,6 +1737,14 @@ def _build_failed_run_record(
         input_events_captured=0,
         input_log_path=None,
         input_warnings=[],
+        input_state_status="OFF",
+        input_state_message="not-started",
+        input_state_frames=0,
+        input_state_log_path=None,
+        input_state_effective_hz=0.0,
+        input_state_target_hz=0,
+        input_state_expected_frames=0,
+        input_state_warnings=[],
     )
 
 

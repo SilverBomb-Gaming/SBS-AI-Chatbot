@@ -74,6 +74,32 @@ class ArtifactPaths:
     events_log: Path
     inputs_log: Path
 
+    def update_run_id(self, new_run_id: str) -> None:
+        if not new_run_id or new_run_id == self.run_id:
+            return
+        target_dir = self.run_dir.parent / new_run_id
+        try:
+            self.run_dir.rename(target_dir)
+        except OSError as exc:  # pragma: no cover - filesystem safety
+            LOGGER.warning("Unable to rename artifacts dir to %s: %s", target_dir, exc)
+            return
+        self.run_id = new_run_id
+        self.run_dir = target_dir
+        self.logs_dir = target_dir / "logs"
+        self.screenshots_dir = target_dir / "screenshots"
+        self.events_dir = target_dir / "events"
+        self.inputs_dir = target_dir / "inputs"
+        self.stdout_log = self.logs_dir / "stdout.log"
+        self.stderr_log = self.logs_dir / "stderr.log"
+        self.events_log = self.events_dir / "events.log"
+        self.inputs_log = self.inputs_dir / "controller_events.jsonl"
+
+    def dense_input_path(self, hz: int, extension: str = "jsonl") -> Path:
+        cleaned_ext = extension.lstrip(".") or "jsonl"
+        safe_hz = max(1, hz)
+        filename = f"controller_state_{safe_hz}hz.{cleaned_ext}"
+        return self.inputs_dir / filename
+
 
 def create_artifact_paths(root: Path, run_id: str | None = None) -> ArtifactPaths:
     """Prepare directories for capturing logs and screenshots."""

@@ -105,6 +105,15 @@ def test_happy_path_create_and_list(client):
     assert detail_json["episode"]["source"] == "unity-runner"
 
 
+def test_human_mode_payload_allowed(client):
+    response = client.post(
+        "/api/episodes",
+        json=_valid_payload(mode="human"),
+        headers={"X-API-Key": "alpha"},
+    )
+    assert response.status_code == 201
+
+
 def test_validation_errors(client):
     bad_mode = client.post(
         "/api/episodes",

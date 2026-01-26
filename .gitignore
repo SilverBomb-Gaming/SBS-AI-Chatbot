@@ -12,3 +12,7 @@ __pycache__/
 runner_artifacts/
 # Legacy folder name (also ignored)
 unity_runner_artifacts/
+
+# Generated run reports
+report_last_run.md
+reports/

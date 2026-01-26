@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from . import persistence
 
-ALLOWED_MODES = {"freestyle", "instructed", "breaker", "c1"}
+ALLOWED_MODES = {"freestyle", "instructed", "breaker", "c1", "human"}
 ALLOWED_STATUS = {"pass", "fail", "error"}
 MAX_SUMMARY_LENGTH = 2000
 MAX_JSON_LENGTH = 8000
