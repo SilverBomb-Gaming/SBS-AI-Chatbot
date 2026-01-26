@@ -18,8 +18,8 @@ try:  # Optional dependency
 except ImportError:  # pragma: no cover - environment specific
     np = None  # type: ignore[assignment]
 
-P1_HEALTH_N = (0.078, 0.014, 0.479, 0.051)
-P2_HEALTH_N = (0.521, 0.014, 0.922, 0.051)
+P1_HEALTH_N = (0.078, 0.032, 0.479, 0.070)
+P2_HEALTH_N = (0.521, 0.032, 0.922, 0.070)
 
 DEFAULT_S_MIN = 80
 DEFAULT_V_MIN = 120

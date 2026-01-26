@@ -80,6 +80,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--debug-hud", action="store_true")
     parser.add_argument("--hud-p1-roi", default="")
     parser.add_argument("--hud-p2-roi", default="")
+    parser.add_argument("--hud-y-offset-px", type=int, default=0)
+    parser.add_argument("--hud-y-offset-norm", type=float, default=None)
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--idle-penalty", type=float, default=DEFAULT_IDLE_PENALTY)
     return parser.parse_args()
@@ -175,6 +177,20 @@ def _parse_roi(raw: str, fallback: Tuple[float, float, float, float]) -> Tuple[f
         return tuple(float(p) for p in parts)  # type: ignore[return-value]
     except ValueError:
         return fallback
+
+
+def _apply_y_offset(
+    roi_px: Tuple[int, int, int, int],
+    *,
+    frame_h: int,
+    offset_px: int,
+) -> Tuple[int, int, int, int]:
+    x1, y1, x2, y2 = roi_px
+    y1 = max(0, min(frame_h, y1 + offset_px))
+    y2 = max(0, min(frame_h, y2 + offset_px))
+    if y2 < y1:
+        y1, y2 = y2, y1
+    return x1, y1, x2, y2
 
 
 def _downsample_gray_bytes(frame: bytes, size: Tuple[int, int], target: Tuple[int, int]) -> bytes:
@@ -309,14 +325,18 @@ def main() -> int:
     )
 
     tracker = None
+    p1_roi_norm: Tuple[float, float, float, float] | None = None
+    p2_roi_norm: Tuple[float, float, float, float] | None = None
     if not args.no_vision:
         try:
             from runner.health_bar import HealthBarTracker
             from runner.health_bar import P1_HEALTH_N, P2_HEALTH_N
 
+            p1_roi_norm = _parse_roi(args.hud_p1_roi, P1_HEALTH_N)
+            p2_roi_norm = _parse_roi(args.hud_p2_roi, P2_HEALTH_N)
             tracker = HealthBarTracker(
-                p1_roi=_parse_roi(args.hud_p1_roi, P1_HEALTH_N),
-                p2_roi=_parse_roi(args.hud_p2_roi, P2_HEALTH_N),
+                p1_roi=p1_roi_norm,
+                p2_roi=p2_roi_norm,
             )
         except Exception as exc:
             raise SystemExit(f"Health bar extraction unavailable: {exc}")
@@ -383,23 +403,29 @@ def main() -> int:
                         if rect_info.get("client_rect"):
                             print(f"CLIENT_RECT={rect_info['client_rect']}")
                         print(f"FRAME_SIZE={width}x{height}")
-                        if tracker is not None:
-                            p1 = tracker.p1_roi
-                            p2 = tracker.p2_roi
+                        if tracker is not None and p1_roi_norm and p2_roi_norm:
                             p1_px = (
-                                int(p1[0] * width),
-                                int(p1[1] * height),
-                                int(p1[2] * width),
-                                int(p1[3] * height),
+                                int(p1_roi_norm[0] * width),
+                                int(p1_roi_norm[1] * height),
+                                int(p1_roi_norm[2] * width),
+                                int(p1_roi_norm[3] * height),
                             )
                             p2_px = (
-                                int(p2[0] * width),
-                                int(p2[1] * height),
-                                int(p2[2] * width),
-                                int(p2[3] * height),
+                                int(p2_roi_norm[0] * width),
+                                int(p2_roi_norm[1] * height),
+                                int(p2_roi_norm[2] * width),
+                                int(p2_roi_norm[3] * height),
                             )
-                            print(f"P1_ROI_PX={p1_px}")
-                            print(f"P2_ROI_PX={p2_px}")
+                            print(f"P1_ROI_PX_PRE={p1_px}")
+                            print(f"P2_ROI_PX_PRE={p2_px}")
+                            offset_px = args.hud_y_offset_px
+                            if args.hud_y_offset_norm is not None:
+                                offset_px = int(args.hud_y_offset_norm * height)
+                            p1_post = _apply_y_offset(p1_px, frame_h=height, offset_px=offset_px)
+                            p2_post = _apply_y_offset(p2_px, frame_h=height, offset_px=offset_px)
+                            print(f"HUD_Y_OFFSET_PX={offset_px}")
+                            print(f"P1_ROI_PX_POST={p1_post}")
+                            print(f"P2_ROI_PX_POST={p2_post}")
 
                     screenshot_path = screenshots_dir / f"ep{episode_idx:03d}_step{step_idx:05d}.png"
                     _save_screenshot(frame, (width, height), screenshot_path)
@@ -426,21 +452,41 @@ def main() -> int:
                         from PIL import ImageDraw  # type: ignore
 
                         image = Image.frombytes("RGB", (width, height), frame)
-                        my_hp, enemy_hp = tracker.update(image)
+                        if args.hud_y_offset_px or args.hud_y_offset_norm is not None:
+                            offset_px = args.hud_y_offset_px
+                            if args.hud_y_offset_norm is not None:
+                                offset_px = int(args.hud_y_offset_norm * height)
+                            shifted = image.transform(
+                                image.size,
+                                Image.AFFINE,
+                                (1, 0, 0, 0, 1, -offset_px),
+                            )
+                            my_hp, enemy_hp = tracker.update(shifted)
+                        else:
+                            my_hp, enemy_hp = tracker.update(image)
+                        offset_px = args.hud_y_offset_px
+                        if args.hud_y_offset_norm is not None:
+                            offset_px = int(args.hud_y_offset_norm * height)
                         if args.debug_hud and (time.perf_counter() - last_debug) >= 1.0:
                             draw = ImageDraw.Draw(image)
                             p1 = tracker.p1_roi
                             p2 = tracker.p2_roi
-                            draw.rectangle(
-                                (p1[0] * width, p1[1] * height, p1[2] * width, p1[3] * height),
-                                outline="red",
-                                width=2,
+                            p1_px = (
+                                int(p1[0] * width),
+                                int(p1[1] * height),
+                                int(p1[2] * width),
+                                int(p1[3] * height),
                             )
-                            draw.rectangle(
-                                (p2[0] * width, p2[1] * height, p2[2] * width, p2[3] * height),
-                                outline="red",
-                                width=2,
+                            p2_px = (
+                                int(p2[0] * width),
+                                int(p2[1] * height),
+                                int(p2[2] * width),
+                                int(p2[3] * height),
                             )
+                            p1_px = _apply_y_offset(p1_px, frame_h=height, offset_px=offset_px)
+                            p2_px = _apply_y_offset(p2_px, frame_h=height, offset_px=offset_px)
+                            draw.rectangle(p1_px, outline="red", width=2)
+                            draw.rectangle(p2_px, outline="red", width=2)
                             hud_path = hud_debug_dir / f"hud_ep{episode_idx:03d}_step{step_idx:05d}.png"
                             image.save(hud_path)
                             print(f"HUD p1={my_hp:.3f} p2={enemy_hp:.3f} step={step_idx}")
