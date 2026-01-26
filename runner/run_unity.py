@@ -57,6 +57,11 @@ from runner.hotkeys import (
     TerminalCommandController,
     open_artifacts_folder,
 )
+from runner.health_bar import (
+    HEALTH_LOG_FILENAME,
+    HealthObservationWriter,
+    read_health_log,
+)
 from runner.input_capture.controller_logger import (
     ControllerLogger,
     ControllerStateStreamLogger,
@@ -927,7 +932,27 @@ def build_episode_payload(config: RunnerConfig, result: RunResult) -> dict:
         payload["scenario"] = {"type": "human_observed", "notes": ""}
     if result.error:
         payload["error"] = result.error
+    health_frames = _load_health_frames(result.artifacts_dir)
+    if health_frames:
+        payload["frames"] = health_frames
+        metrics["health_observations"] = {
+            "frames": len(health_frames),
+            "log_path": str(
+                (result.artifacts_dir / "inputs" / HEALTH_LOG_FILENAME)
+                if result.artifacts_dir
+                else HEALTH_LOG_FILENAME
+            ),
+        }
     return payload
+
+
+def _load_health_frames(artifacts_dir: Path | None) -> List[Dict[str, Any]]:
+    if not artifacts_dir:
+        return []
+    health_path = artifacts_dir / "inputs" / HEALTH_LOG_FILENAME
+    if not health_path.exists():
+        return []
+    return list(read_health_log(health_path))
 
 
 def _write_pending_episode(
@@ -1012,6 +1037,13 @@ def execute_run(
         prefix = f"{lock_result.label}_screenshot"
     elif canonical_target and canonical_target.process_name:
         prefix = f"{sanitize_name(canonical_target.process_name)}_screenshot"
+    health_writer: HealthObservationWriter | None = None
+    try:
+        health_log_path = artifacts.inputs_dir / HEALTH_LOG_FILENAME
+        health_writer = HealthObservationWriter(health_log_path)
+        LOGGER.info("Health bar extraction enabled: %s", health_log_path)
+    except Exception as exc:  # pragma: no cover - optional dependency
+        LOGGER.warning("Health bar extraction disabled: %s", exc)
     recorder = ScreenshotRecorder(
         config.screenshot_interval_seconds,
         artifacts,
@@ -1019,6 +1051,7 @@ def execute_run(
         capture_mode=config.capture_mode,
         event_logger=event_logger,
         filename_prefix=prefix,
+        on_capture=health_writer.record_from_path if health_writer else None,
     )
     input_logger: ControllerLogger | None = None
     input_summary = InputLoggingSummary.disabled("per config")

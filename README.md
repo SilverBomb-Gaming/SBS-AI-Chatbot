@@ -60,6 +60,18 @@ This is the first true “AI plays a video game” moment in this project.
 
 ---
 
+## 👁️ Live Observation + Reward (Health Bars)
+
+We now extract health bars directly from screenshots and compute a reward signal:
+
+- `health_p1`, `health_p2` per frame
+- `delta_p1`, `delta_p2` per frame
+- reward = (damage dealt) − (damage taken)
+
+This gives the agent a real-time score it can optimize.
+
+---
+
 ## 🔄 Proven End-to-End Loop
 
 
@@ -95,6 +107,11 @@ Test-Path "$run\inputs\controller_state_60hz.jsonl"
 python .\tools\replay_controller_state.py --jsonl "$run\inputs\controller_state_60hz.jsonl" --hz 60 --duration 60
 ```
 
+### 4) Minimal autonomous agent loop (decision + reward logging)
+```
+python .\tools\agent_loop.py --duration 60 --decision-hz 12 --action-seconds 0.1 --save-screenshots
+```
+
 ---
 
 ## 🧠 What’s Next
@@ -114,6 +131,33 @@ Immediate goals:
 - If SF6 doesn’t respond: disable Steam Input, unplug physical controllers, and confirm the virtual controller appears in Windows.
 - If the target locks the wrong window: set `RUNNER_TARGET_MODE=exe` + `RUNNER_TARGET_EXE=StreetFighter6.exe`.
 - The 60 Hz dense stream is independent of the sparse poll interval; cadence should be evaluated via `controller_state_60hz.jsonl`.
+
+---
+
+## 📦 Packaging a Run for Review
+
+Package the latest run into a compact zip (default screenshot cap):
+
+```
+.\tools\package_run.ps1
+```
+
+Include more screenshots:
+
+```
+.\tools\package_run.ps1 -MaxScreenshots 200
+```
+
+What gets included:
+- `metadata/target_process.json`
+- `events/events.log`
+- `inputs/` (dense + sparse + health observations if present)
+- `episode_payload.json` / `episode_payload.jsonl` / `episode_pending.json` (if present)
+- `logs/`
+- `report_last_run.md` (run copy or global report)
+- `screenshots/` (capped by `-MaxScreenshots`)
+
+Note: health extraction depends on screenshots. If you need reward validation, avoid `-MaxScreenshots 0`.
 
 ---
 

@@ -10,7 +10,7 @@ import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from runner.events import EventLogger
 
@@ -139,6 +139,7 @@ class ScreenshotRecorder:
     capture_mode: str = "unity_window"
     event_logger: EventLogger | None = None
     filename_prefix: str = "screenshot"
+    on_capture: Callable[[Path], None] | None = None
     _captures: List[Path] = field(default_factory=list, init=False)
     _thread: threading.Thread | None = field(default=None, init=False)
     _stop_event: threading.Event = field(default_factory=threading.Event, init=False)
@@ -295,6 +296,11 @@ class ScreenshotRecorder:
             event_type = "manual_screenshot" if manual else "screenshot_auto"
             self._log_event(event_type, f"{label}:{output_path}")
             LOGGER.debug("Captured screenshot %s", output_path)
+            if self.on_capture:
+                try:
+                    self.on_capture(output_path)
+                except Exception as exc:  # pragma: no cover - best effort
+                    LOGGER.warning("Screenshot on_capture callback failed: %s", exc)
             return output_path
         except Exception as exc:  # pragma: no cover - defensive
             LOGGER.warning("Unable to capture screenshot: %s", exc)

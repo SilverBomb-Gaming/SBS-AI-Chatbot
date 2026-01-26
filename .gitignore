@@ -16,3 +16,7 @@ unity_runner_artifacts/
 # Generated run reports
 report_last_run.md
 reports/
+
+# Run handoff zips
+handoff_*.zip
+/handoffs/
