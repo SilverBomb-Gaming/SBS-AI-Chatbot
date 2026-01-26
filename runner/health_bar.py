@@ -89,12 +89,19 @@ class HealthBarTracker:
     s_min: int = DEFAULT_S_MIN
     v_min: int = DEFAULT_V_MIN
     color_order: str = "RGB"
+    p1_roi: Tuple[float, float, float, float] = P1_HEALTH_N
+    p2_roi: Tuple[float, float, float, float] = P2_HEALTH_N
     _last_p1: Optional[float] = None
     _last_p2: Optional[float] = None
 
     def update(self, frame: Any) -> Tuple[float, float]:
         raw_p1, raw_p2 = extract_health(
-            frame, s_min=self.s_min, v_min=self.v_min, color_order=self.color_order
+            frame,
+            p1_roi=self.p1_roi,
+            p2_roi=self.p2_roi,
+            s_min=self.s_min,
+            v_min=self.v_min,
+            color_order=self.color_order,
         )
         if self._last_p1 is None or self._last_p2 is None:
             self._last_p1 = raw_p1

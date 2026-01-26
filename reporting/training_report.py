@@ -81,6 +81,9 @@ def generate_report(
 
     action_stats: Dict[str, Dict[str, float]] = defaultdict(lambda: {"count": 0, "reward": 0.0, "d_enemy": 0.0, "d_me": 0.0})
     time_bucket_stats: Dict[int, List[float]] = defaultdict(list)
+    screen_deltas: List[float] = []
+    delta_threshold: float | None = None
+    delta_gt_count = 0
     epsilons: List[float] = []
 
     for row in transitions:
@@ -89,6 +92,17 @@ def generate_report(
         d_enemy = float(row.get("delta_enemy", 0.0))
         d_me = float(row.get("delta_me", 0.0))
         time_bucket = int(row.get("time_bucket", 0))
+        if "screen_delta" in row:
+            try:
+                screen_delta = float(row.get("screen_delta", 0.0))
+                screen_deltas.append(screen_delta)
+            except (TypeError, ValueError):
+                pass
+        if delta_threshold is None and row.get("delta_threshold") is not None:
+            try:
+                delta_threshold = float(row.get("delta_threshold"))
+            except (TypeError, ValueError):
+                delta_threshold = None
         epsilon = row.get("epsilon")
         if epsilon is not None:
             try:
@@ -101,6 +115,12 @@ def generate_report(
         stats["d_enemy"] += d_enemy
         stats["d_me"] += d_me
         time_bucket_stats[time_bucket].append(reward)
+        if delta_threshold is not None and "screen_delta" in row:
+            try:
+                if float(row.get("screen_delta", 0.0)) > delta_threshold:
+                    delta_gt_count += 1
+            except (TypeError, ValueError):
+                pass
 
     action_rows = []
     for action, stats in action_stats.items():
@@ -135,6 +155,11 @@ def generate_report(
     lines.append("## Summary")
     lines.append(f"- Episodes: {len(summaries)}")
     lines.append(f"- Average reward per episode: {avg_reward:.4f}")
+    if screen_deltas:
+        lines.append(f"- Avg screen delta: {mean(screen_deltas):.4f}")
+        if delta_threshold is not None:
+            pct_delta = (delta_gt_count / max(1, len(screen_deltas))) * 100.0
+            lines.append(f"- Steps delta > threshold: {pct_delta:.1f}% (threshold={delta_threshold:.3f})")
     if best:
         lines.append(f"- Best episode: {best.episode_idx} (net_advantage={best.net_advantage:.4f})")
     if worst:
@@ -173,6 +198,11 @@ def generate_report(
         lines.append("## High Damage Periods")
         for bucket, avg_reward in high_damage:
             lines.append(f"- time_bucket {bucket}: avg_reward={avg_reward:.4f}")
+
+    lines.append("")
+    lines.append("## Action Histogram")
+    for action, avg, count, _, _ in action_rows:
+        lines.append(f"- {action}: count={count}")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")

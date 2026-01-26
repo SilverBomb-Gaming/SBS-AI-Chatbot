@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 import signal
 import time
+from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Deque, Dict, Optional, Tuple
 
 import vgamepad as vg
 
@@ -22,7 +24,7 @@ except ImportError:  # pragma: no cover - environment specific
 
 from agent.action_set import ACTIONS, Action, action_names, apply_action, get_action, release_all
 from agent.q_learner import QLearner
-from agent.reward import DEFAULT_IDLE_PENALTY, compute_reward, net_advantage
+from agent.reward import DEFAULT_IDLE_PENALTY, net_advantage
 from agent.state import make_state
 from reporting.training_report import generate_report
 from runner.target_detect import lock_target
@@ -59,6 +61,20 @@ def parse_args() -> argparse.Namespace:
         default=0.0,
         help="Create a virtual controller, pulse A once, then sleep for N seconds before exit.",
     )
+    parser.add_argument(
+        "--reward-mode",
+        choices=["delta", "vision", "both"],
+        default="both",
+        help="Reward source: screen delta, vision health, or both.",
+    )
+    parser.add_argument("--delta-threshold", type=float, default=0.02)
+    parser.add_argument("--delta-reward", type=float, default=0.01)
+    parser.add_argument("--delta-window", type=int, default=1)
+    parser.add_argument("--deal-weight", type=float, default=1.0)
+    parser.add_argument("--take-weight", type=float, default=1.2)
+    parser.add_argument("--debug-hud", action="store_true")
+    parser.add_argument("--hud-p1-roi", default="")
+    parser.add_argument("--hud-p2-roi", default="")
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--idle-penalty", type=float, default=DEFAULT_IDLE_PENALTY)
     return parser.parse_args()
@@ -80,6 +96,39 @@ def _save_screenshot(rgb_bytes: bytes, size: tuple, path: Path) -> None:
     if mss_tools is None:
         return
     mss_tools.to_png(rgb_bytes, size, output=str(path))  # type: ignore[arg-type]
+
+
+def _parse_roi(raw: str, fallback: Tuple[float, float, float, float]) -> Tuple[float, float, float, float]:
+    if not raw:
+        return fallback
+    parts = [p.strip() for p in raw.split(",")]
+    if len(parts) != 4:
+        return fallback
+    try:
+        return tuple(float(p) for p in parts)  # type: ignore[return-value]
+    except ValueError:
+        return fallback
+
+
+def _downsample_gray_bytes(frame: bytes, size: Tuple[int, int], target: Tuple[int, int]) -> bytes:
+    from PIL import Image  # type: ignore
+
+    image = Image.frombytes("RGB", size, frame)
+    gray = image.convert("L").resize(target)
+    return gray.tobytes()
+
+
+def _screen_delta(prev_bytes: bytes, curr_bytes: bytes) -> float:
+    if not prev_bytes or not curr_bytes or len(prev_bytes) != len(curr_bytes):
+        return 0.0
+    total = 0
+    for a, b in zip(prev_bytes, curr_bytes):
+        total += abs(a - b)
+    return total / (255.0 * len(curr_bytes))
+
+
+def _frame_hash(gray_bytes: bytes) -> str:
+    return hashlib.md5(gray_bytes).hexdigest()[:12]
 
 
 def _resolve_force_button(name: str | None) -> vg.XUSB_BUTTON | None:
@@ -125,6 +174,9 @@ def main() -> int:
     )
     run_root.mkdir(parents=True, exist_ok=True)
     screenshots_dir.mkdir(parents=True, exist_ok=True)
+    hud_debug_dir = run_root / "hud_debug"
+    if args.debug_hud:
+        hud_debug_dir.mkdir(parents=True, exist_ok=True)
     transitions_path = run_root / "transitions.jsonl"
     summaries_path = run_root / "episode_summaries.json"
 
@@ -190,8 +242,12 @@ def main() -> int:
     if not args.no_vision:
         try:
             from runner.health_bar import HealthBarTracker
+            from runner.health_bar import P1_HEALTH_N, P2_HEALTH_N
 
-            tracker = HealthBarTracker()
+            tracker = HealthBarTracker(
+                p1_roi=_parse_roi(args.hud_p1_roi, P1_HEALTH_N),
+                p2_roi=_parse_roi(args.hud_p2_roi, P2_HEALTH_N),
+            )
         except Exception as exc:
             raise SystemExit(f"Health bar extraction unavailable: {exc}")
     legal_actions = action_names()
@@ -221,6 +277,14 @@ def main() -> int:
                 current_action = get_action("NEUTRAL")
                 action_started = True
                 episode_health_start = None
+                episode_health_end = None
+                prev_gray = b""
+                delta_window: Deque[float] = deque(maxlen=max(1, args.delta_window))
+                avg_screen_delta = 0.0
+                delta_gt_count = 0
+                frame_hash_prev = ""
+                same_state_streak = 0
+                last_debug = time.perf_counter()
 
                 while time.perf_counter() < episode_end:
                     if stop_requested:
@@ -235,13 +299,47 @@ def main() -> int:
                     screenshot_path = screenshots_dir / f"ep{episode_idx:03d}_step{step_idx:05d}.png"
                     _save_screenshot(frame, (width, height), screenshot_path)
 
+                    gray_small = _downsample_gray_bytes(frame, (width, height), (64, 36))
+                    delta = _screen_delta(prev_gray, gray_small)
+                    delta_window.append(delta)
+                    avg_delta = sum(delta_window) / len(delta_window)
+                    avg_screen_delta += avg_delta
+                    if avg_delta > args.delta_threshold:
+                        delta_gt_count += 1
+                    prev_gray = gray_small
+                    frame_hash = _frame_hash(gray_small)
+                    if frame_hash == frame_hash_prev:
+                        same_state_streak += 1
+                    else:
+                        same_state_streak = 0
+                        frame_hash_prev = frame_hash
+
                     my_hp = 1.0
                     enemy_hp = 1.0
                     if tracker is not None:
                         from PIL import Image  # type: ignore
+                        from PIL import ImageDraw  # type: ignore
 
                         image = Image.frombytes("RGB", (width, height), frame)
                         my_hp, enemy_hp = tracker.update(image)
+                        if args.debug_hud and (time.perf_counter() - last_debug) >= 1.0:
+                            draw = ImageDraw.Draw(image)
+                            p1 = tracker.p1_roi
+                            p2 = tracker.p2_roi
+                            draw.rectangle(
+                                (p1[0] * width, p1[1] * height, p1[2] * width, p1[3] * height),
+                                outline="red",
+                                width=2,
+                            )
+                            draw.rectangle(
+                                (p2[0] * width, p2[1] * height, p2[2] * width, p2[3] * height),
+                                outline="red",
+                                width=2,
+                            )
+                            hud_path = hud_debug_dir / f"hud_ep{episode_idx:03d}_step{step_idx:05d}.png"
+                            image.save(hud_path)
+                            print(f"HUD p1={my_hp:.3f} p2={enemy_hp:.3f} step={step_idx}")
+                            last_debug = time.perf_counter()
 
                     if episode_health_start is None:
                         episode_health_start = (my_hp, enemy_hp)
@@ -249,14 +347,28 @@ def main() -> int:
                     reward = 0.0
                     delta_enemy = 0.0
                     delta_me = 0.0
-                    if prev_health is not None and tracker is not None:
-                        reward, delta_enemy, delta_me = compute_reward(
-                            enemy_prev=prev_health["enemy"],
-                            enemy_now=enemy_hp,
-                            me_prev=prev_health["me"],
-                            me_now=my_hp,
-                            idle_penalty=args.idle_penalty,
+                    vision_reward = 0.0
+                    delta_reward = 0.0
+                    if args.reward_mode in {"delta", "both"}:
+                        if avg_delta > args.delta_threshold:
+                            delta_reward = args.delta_reward
+                        else:
+                            delta_reward = -args.idle_penalty
+                    if prev_health is not None and tracker is not None and args.reward_mode in {"vision", "both"}:
+                        delta_enemy = max(0.0, prev_health["enemy"] - enemy_hp)
+                        delta_me = max(0.0, prev_health["me"] - my_hp)
+                        vision_reward = (args.deal_weight * delta_enemy) - (
+                            args.take_weight * delta_me
                         )
+                        if delta_enemy <= 0 and delta_me <= 0:
+                            vision_reward -= args.idle_penalty
+                    if args.reward_mode == "delta":
+                        reward = delta_reward
+                    elif args.reward_mode == "vision":
+                        reward = vision_reward
+                    else:
+                        reward = delta_reward + vision_reward
+                    reward = max(-0.05, min(0.05, reward))
 
                     state = make_state(my_hp, enemy_hp, t_run, prev_action, args.episode_seconds)
 
@@ -304,6 +416,12 @@ def main() -> int:
                         "reward": reward,
                         "delta_enemy": delta_enemy,
                         "delta_me": delta_me,
+                        "screen_delta": avg_delta,
+                        "reward_delta_component": delta_reward,
+                        "reward_vision_component": vision_reward,
+                        "delta_threshold": args.delta_threshold,
+                        "frame_hash": frame_hash,
+                        "same_state_streak": same_state_streak,
                         "state": state,
                         "action": action_name,
                         "epsilon": learner.epsilon,
@@ -327,6 +445,7 @@ def main() -> int:
                 if episode_health_start is None:
                     episode_health_start = (1.0, 1.0)
                 episode_health_end = prev_health or {"me": 1.0, "enemy": 1.0}
+                avg_screen_delta = avg_screen_delta / max(1, step_idx)
                 advantage = net_advantage(
                     enemy_start=episode_health_start[1],
                     enemy_end=episode_health_end["enemy"],
@@ -338,6 +457,12 @@ def main() -> int:
                     "total_reward": total_reward,
                     "net_advantage": advantage,
                     "steps": step_idx,
+                    "p1_start": episode_health_start[0],
+                    "p2_start": episode_health_start[1],
+                    "p1_end": episode_health_end["me"],
+                    "p2_end": episode_health_end["enemy"],
+                    "avg_screen_delta": avg_screen_delta,
+                    "pct_delta_gt_threshold": (delta_gt_count / max(1, step_idx)) * 100.0,
                 }
                 episode_summaries.append(summary)
                 summaries_path.write_text(
