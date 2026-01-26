@@ -27,6 +27,27 @@ ACTIONS: List[Action] = [
     Action("LIGHT_KICK", buttons=("A",), tap=True),
 ]
 
+_BUTTON_ALIASES = {
+    "A": "XUSB_GAMEPAD_A",
+    "B": "XUSB_GAMEPAD_B",
+    "X": "XUSB_GAMEPAD_X",
+    "Y": "XUSB_GAMEPAD_Y",
+    "LB": "XUSB_GAMEPAD_LEFT_SHOULDER",
+    "RB": "XUSB_GAMEPAD_RIGHT_SHOULDER",
+    "LS": "XUSB_GAMEPAD_LEFT_THUMB",
+    "RS": "XUSB_GAMEPAD_RIGHT_THUMB",
+    "BACK": "XUSB_GAMEPAD_BACK",
+    "START": "XUSB_GAMEPAD_START",
+}
+
+
+def resolve_button(name: str) -> vg.XUSB_BUTTON | None:
+    key = (name or "").strip().upper()
+    attr = _BUTTON_ALIASES.get(key)
+    if not attr:
+        return None
+    return getattr(vg.XUSB_BUTTON, attr, None)
+
 
 def action_names() -> List[str]:
     return [action.name for action in ACTIONS]
@@ -41,13 +62,17 @@ def get_action(name: str) -> Action:
 
 def _press_buttons(gamepad: vg.VX360Gamepad, buttons: Iterable[str]) -> None:
     for name in buttons:
-        btn = getattr(vg.XUSB_BUTTON, f"XUSB_GAMEPAD_{name}")
+        btn = resolve_button(name)
+        if btn is None:
+            continue
         gamepad.press_button(btn)
 
 
 def _release_buttons(gamepad: vg.VX360Gamepad, buttons: Iterable[str]) -> None:
     for name in buttons:
-        btn = getattr(vg.XUSB_BUTTON, f"XUSB_GAMEPAD_{name}")
+        btn = resolve_button(name)
+        if btn is None:
+            continue
         gamepad.release_button(btn)
 
 
@@ -72,7 +97,9 @@ def release_all(gamepad: vg.VX360Gamepad) -> None:
     else:
         gamepad.left_joystick(0, 0)
     for name in ("A", "B", "X", "Y", "LB", "RB", "BACK", "START", "LS", "RS"):
-        btn = getattr(vg.XUSB_BUTTON, f"XUSB_GAMEPAD_{name}")
+        btn = resolve_button(name)
+        if btn is None:
+            continue
         gamepad.release_button(btn)
     for btn in (
         vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP,

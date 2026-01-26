@@ -26,6 +26,7 @@ except ImportError:  # pragma: no cover - environment specific
     mss_tools = None  # type: ignore
 
 from runner.health_bar import HealthBarTracker
+from agent.action_set import resolve_button
 
 
 ACTION_SET = [
@@ -53,7 +54,9 @@ def _apply_state(gamepad: vg.VX360Gamepad, state: ActionState) -> None:
         gamepad.left_joystick(int(state.ls_x * 32767), int(state.ls_y * 32767))
 
     for name in ("A", "B", "X", "Y", "LB", "RB", "BACK", "START", "LS", "RS"):
-        btn = getattr(vg.XUSB_BUTTON, f"XUSB_GAMEPAD_{name}")
+        btn = resolve_button(name)
+        if btn is None:
+            continue
         if state.buttons and name in state.buttons:
             gamepad.press_button(btn)
         else:

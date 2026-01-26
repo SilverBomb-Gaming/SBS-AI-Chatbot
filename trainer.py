@@ -44,6 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--screenshot-dir", default="")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-vision", action="store_true")
+    parser.add_argument("--debug-buttons", action="store_true")
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--idle-penalty", type=float, default=DEFAULT_IDLE_PENALTY)
     return parser.parse_args()
@@ -89,6 +90,12 @@ def main() -> int:
 
     policy_path = Path(args.policy_path)
     learner = QLearner.load(policy_path)
+
+    if args.debug_buttons:
+        button_names = [name for name in dir(vg.XUSB_BUTTON) if name.startswith("XUSB_GAMEPAD_")]
+        print("Available XUSB_BUTTON enums:")
+        for name in sorted(button_names):
+            print(f"- {name}")
 
     lock = lock_target(
         mode="exe",
