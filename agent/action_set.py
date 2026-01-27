@@ -24,7 +24,23 @@ ACTIONS: List[Action] = [
     Action("CROUCH_BLOCK", ls_x=-0.6, ls_y=-0.6),
     Action("STAND_BLOCK", ls_x=-0.6),
     Action("LIGHT_PUNCH", buttons=("X",), tap=True),
+    Action("MEDIUM_PUNCH", buttons=("Y",), tap=True),
+    Action("HEAVY_PUNCH", buttons=("RB",), tap=True),
     Action("LIGHT_KICK", buttons=("A",), tap=True),
+    Action("MEDIUM_KICK", buttons=("B",), tap=True),
+    Action("HEAVY_KICK", buttons=("LB",), tap=True),
+    Action("DPAD_LEFT", buttons=("DPAD_LEFT",), tap=True),
+    Action("DPAD_RIGHT", buttons=("DPAD_RIGHT",), tap=True),
+    Action("DPAD_UP", buttons=("DPAD_UP",), tap=True),
+    Action("DPAD_DOWN", buttons=("DPAD_DOWN",), tap=True),
+    Action("CROUCH_LIGHT_PUNCH", ls_y=-1.0, buttons=("X",), tap=True),
+    Action("CROUCH_MEDIUM_PUNCH", ls_y=-1.0, buttons=("Y",), tap=True),
+    Action("CROUCH_HEAVY_KICK", ls_y=-1.0, buttons=("B",), tap=True),
+    Action("JUMP_NEUTRAL", ls_y=0.8),
+    Action("JUMP_FORWARD", ls_x=0.5, ls_y=0.8),
+    Action("JUMP_BACK", ls_x=-0.5, ls_y=0.8),
+    Action("JUMP_NEUTRAL_PUNCH", ls_y=0.8, buttons=("X",), tap=True),
+    Action("JUMP_FORWARD_KICK", ls_x=0.5, ls_y=0.8, buttons=("B",), tap=True),
 ]
 
 _BUTTON_ALIASES = {
@@ -38,6 +54,10 @@ _BUTTON_ALIASES = {
     "RS": "XUSB_GAMEPAD_RIGHT_THUMB",
     "BACK": "XUSB_GAMEPAD_BACK",
     "START": "XUSB_GAMEPAD_START",
+    "DPAD_UP": "XUSB_GAMEPAD_DPAD_UP",
+    "DPAD_DOWN": "XUSB_GAMEPAD_DPAD_DOWN",
+    "DPAD_LEFT": "XUSB_GAMEPAD_DPAD_LEFT",
+    "DPAD_RIGHT": "XUSB_GAMEPAD_DPAD_RIGHT",
 }
 
 

@@ -13,9 +13,15 @@ import time
 from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Deque, Dict, Optional, Tuple
+from typing import Deque, Dict, List, Optional, Tuple
 
 import vgamepad as vg
+import numpy as np
+
+try:  # Optional dependency for video capture
+    import imageio.v2 as imageio  # type: ignore
+except ImportError:  # pragma: no cover - optional feature
+    imageio = None  # type: ignore
 
 try:  # Optional dependency for screenshot capture
     import mss  # type: ignore
@@ -50,6 +56,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-poll-ms", type=int, default=100)
     parser.add_argument("--capture-mode", choices=["desktop", "window"], default="desktop")
     parser.add_argument("--screenshot-dir", default="")
+    parser.add_argument(
+        "--screenshot-interval",
+        type=int,
+        default=1,
+        help=(
+            "Save a screenshot every N decisions (<=0 disables screenshots entirely). "
+            "Lower values capture more detail but add I/O overhead."
+        ),
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-vision", action="store_true")
     parser.add_argument("--debug-buttons", action="store_true")
@@ -103,6 +118,27 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hud-roi-mode", choices=["poly", "rect"], default="poly")
     parser.add_argument("--hud-y-offset-px", type=int, default=0)
     parser.add_argument("--hud-y-offset-norm", type=float, default=None)
+    parser.add_argument(
+        "--record-video",
+        action="store_true",
+        help="Record an MP4 of captured frames inside the run directory.",
+    )
+    parser.add_argument(
+        "--video-fps",
+        type=float,
+        default=0.0,
+        help="Frames per second for --record-video. Defaults to decision-hz when <= 0.",
+    )
+    parser.add_argument(
+        "--tap-select-between-episodes",
+        action="store_true",
+        help="Tap the Select/BACK button after each episode to reset battle positions.",
+    )
+    parser.add_argument(
+        "--action-script",
+        default="",
+        help="Path to a JSON list describing a repeating action sequence for data collection.",
+    )
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--idle-penalty", type=float, default=DEFAULT_IDLE_PENALTY)
     return parser.parse_args()
@@ -177,6 +213,74 @@ def _capture_region_for_target(hwnd: Optional[int], capture_mode: str) -> Tuple[
         }
         return region, {"window_rect": window_rect, "client_rect": client_rect}
     return {}, {"window_rect": window_rect, "client_rect": client_rect}
+
+
+def _load_action_script(path: Path) -> List[Tuple[str, int]]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:  # pragma: no cover - config errors
+        raise SystemExit(f"Unable to parse action script {path}: {exc}")
+    if not isinstance(payload, list) or not payload:
+        raise SystemExit(f"Action script {path} must be a non-empty JSON list.")
+    legal = set(action_names())
+    plan: List[Tuple[str, int]] = []
+    for entry in payload:
+        action_name: str
+        repeat = 1
+        if isinstance(entry, str):
+            action_name = entry.strip()
+        elif isinstance(entry, dict):
+            action_name = str(entry.get("action", "")).strip()
+            repeat = int(entry.get("repeat", 1))
+        else:
+            raise SystemExit(f"Invalid entry in action script {path}: {entry!r}")
+        if not action_name:
+            raise SystemExit(f"Action script {path} contains blank action names.")
+        if action_name not in legal:
+            raise SystemExit(
+                f"Action script {path} references unknown action '{action_name}'."
+            )
+        if repeat <= 0:
+            raise SystemExit(
+                f"Action script entry '{action_name}' must have repeat >= 1."
+            )
+        plan.append((action_name, repeat))
+    return plan
+
+
+class VideoRecorder:
+    """Lazy video writer backed by imageio."""
+
+    def __init__(self, output_path: Path, fps: float):
+        if imageio is None:  # pragma: no cover - optional dependency
+            raise RuntimeError("imageio is required for video recording")
+        self.output_path = output_path
+        self.fps = max(1.0, fps)
+        self._writer = None
+        self._frames = 0
+
+    def append(self, frame_bytes: bytes, width: int, height: int) -> None:
+        if imageio is None:  # pragma: no cover - optional dependency
+            raise RuntimeError("imageio is required for video recording")
+        if self._writer is None:
+            self.output_path.parent.mkdir(parents=True, exist_ok=True)
+            self._writer = imageio.get_writer(
+                str(self.output_path),
+                fps=self.fps,
+                macro_block_size=1,
+            )
+        array = np.frombuffer(frame_bytes, dtype=np.uint8).reshape((height, width, 3))
+        self._writer.append_data(array)
+        self._frames += 1
+
+    def close(self) -> None:
+        if self._writer is not None:
+            self._writer.close()
+            self._writer = None
+
+    @property
+    def frame_count(self) -> int:
+        return self._frames
 
 
 def _parse_roi(raw: str, fallback: Tuple[float, float, float, float]) -> Tuple[float, float, float, float]:
@@ -265,12 +369,20 @@ def _resolve_force_button(name: str | None) -> vg.XUSB_BUTTON | None:
     return getattr(vg.XUSB_BUTTON, attr, None)
 
 
-def _tap_a(gamepad: vg.VX360Gamepad, *, hold_seconds: float = 0.08) -> None:
-    gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+def _tap_button(gamepad: vg.VX360Gamepad, button: vg.XUSB_BUTTON, *, hold_seconds: float = 0.08) -> None:
+    gamepad.press_button(button=button)
     gamepad.update()
     time.sleep(max(0.0, hold_seconds))
-    gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+    gamepad.release_button(button=button)
     gamepad.update()
+
+
+def _tap_a(gamepad: vg.VX360Gamepad, *, hold_seconds: float = 0.08) -> None:
+    _tap_button(gamepad, vg.XUSB_BUTTON.XUSB_GAMEPAD_A, hold_seconds=hold_seconds)
+
+
+def _tap_select(gamepad: vg.VX360Gamepad, *, hold_seconds: float = 0.1) -> None:
+    _tap_button(gamepad, vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK, hold_seconds=hold_seconds)
 
 
 def main() -> int:
@@ -286,18 +398,43 @@ def main() -> int:
 
     run_ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     run_root = Path("training_runs") / run_ts
-    screenshots_dir = (
-        Path(args.screenshot_dir)
-        if args.screenshot_dir
-        else run_root / "screenshots"
-    )
+    screenshot_interval: Optional[int] = args.screenshot_interval if args.screenshot_interval > 0 else None
+    screenshots_dir: Optional[Path] = None
+    if screenshot_interval:
+        screenshots_dir = (
+            Path(args.screenshot_dir)
+            if args.screenshot_dir
+            else run_root / "screenshots"
+        )
     run_root.mkdir(parents=True, exist_ok=True)
-    screenshots_dir.mkdir(parents=True, exist_ok=True)
+    if screenshots_dir:
+        screenshots_dir.mkdir(parents=True, exist_ok=True)
     hud_debug_dir = run_root / "hud_debug"
     if args.debug_hud:
         hud_debug_dir.mkdir(parents=True, exist_ok=True)
     transitions_path = run_root / "transitions.jsonl"
     summaries_path = run_root / "episode_summaries.json"
+    video_recorder: VideoRecorder | None = None
+    if args.record_video:
+        if imageio is None:
+            raise SystemExit(
+                "--record-video requires imageio[ffmpeg]. Run 'pip install imageio[ffmpeg]'"
+            )
+        fps = args.video_fps if args.video_fps > 0 else args.decision_hz
+        video_recorder = VideoRecorder(run_root / "run_capture.mp4", fps=fps)
+    action_script: List[Tuple[str, int]] = []
+    script_index = 0
+    script_remaining = 0
+    if args.action_script:
+        script_path = Path(args.action_script)
+        if not script_path.exists():
+            raise SystemExit(f"Action script file not found: {script_path}")
+        action_script = _load_action_script(script_path)
+        script_index = 0
+        script_remaining = action_script[0][1]
+        print(
+            f"ACTION_SCRIPT_LOADED={script_path} entries={len(action_script)} repeats={sum(r for _, r in action_script)}"
+        )
 
     policy_path = Path(args.policy_path)
     policy_path.parent.mkdir(parents=True, exist_ok=True)
@@ -512,8 +649,17 @@ def main() -> int:
                                 print(f"P2_POLY_PX={p2_list}")
                                 roi_diag_px = {"p1": p1_list, "p2": p2_list}
 
-                    screenshot_path = screenshots_dir / f"ep{episode_idx:03d}_step{step_idx:05d}.png"
-                    _save_screenshot(frame, (width, height), screenshot_path)
+                    screenshot_path_str = ""
+                    if screenshots_dir and screenshot_interval and (step_idx % screenshot_interval == 0):
+                        screenshot_path = screenshots_dir / f"ep{episode_idx:03d}_step{step_idx:05d}.png"
+                        _save_screenshot(frame, (width, height), screenshot_path)
+                        screenshot_path_str = str(screenshot_path)
+                    if video_recorder:
+                        try:
+                            video_recorder.append(frame, width, height)
+                        except Exception as exc:
+                            print(f"VIDEO_RECORDING_FAILED={exc}")
+                            video_recorder = None
 
                     gray_small = _downsample_gray_bytes(frame, (width, height), (64, 36))
                     delta = _screen_delta(prev_gray, gray_small)
@@ -653,7 +799,14 @@ def main() -> int:
                             print(f"FORCE_ACTION={action_name} step={step_idx}")
                     else:
                         if hold_remaining <= 0:
-                            action_name = learner.select_action(state, legal_actions)
+                            if action_script:
+                                action_name = action_script[script_index][0]
+                                script_remaining -= 1
+                                if script_remaining <= 0:
+                                    script_index = (script_index + 1) % len(action_script)
+                                    script_remaining = action_script[script_index][1]
+                            else:
+                                action_name = learner.select_action(state, legal_actions)
                             current_action = get_action(action_name)
                             hold_remaining = args.action_hold_ticks
                             action_started = True
@@ -679,7 +832,7 @@ def main() -> int:
                         "episode_idx": episode_idx,
                         "step_idx": step_idx,
                         "t_run_s": t_run,
-                        "screenshot_path": str(screenshot_path),
+                        "screenshot_path": screenshot_path_str or None,
                         "my_hp": my_hp,
                         "enemy_hp": enemy_hp,
                         "reward": reward,
@@ -746,12 +899,20 @@ def main() -> int:
                     encoding="utf-8",
                 )
                 learner.save(policy_path)
+                if args.tap_select_between_episodes and not stop_requested:
+                    _tap_select(gamepad)
+                    print("TAPPED_SELECT_RESET=1")
     finally:
         try:
             release_all(gamepad)
             if not args.dry_run:
                 time.sleep(0.25)
                 release_all(gamepad)
+        except Exception:
+            pass
+        try:
+            if video_recorder:
+                video_recorder.close()
         except Exception:
             pass
 
@@ -769,6 +930,8 @@ def main() -> int:
     print(f"RUN_DIR={run_root.resolve()}")
     print(f"WROTE_POLICY={policy_path.resolve()}")
     print(f"WROTE_REPORT={report_path.resolve()}")
+    if video_recorder and video_recorder.frame_count > 0:
+        print(f"WROTE_VIDEO={video_recorder.output_path.resolve()}")
     return 0
 
 

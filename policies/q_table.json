@@ -1,0 +1,1932 @@
+{
+  "alpha": 0.15,
+  "gamma": 0.95,
+  "epsilon": 0.1,
+  "epsilon_end": 0.1,
+  "epsilon_decay": 0.995,
+  "q_table": {
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 0, \"time\": 0}": {
+      "WALK_RIGHT": -0.00555,
+      "NEUTRAL": 0.000907558977883621,
+      "WALK_LEFT": -0.0048675,
+      "CROUCH_BLOCK": -0.00555,
+      "STAND_BLOCK": 0.03776338256921435,
+      "LIGHT_PUNCH": -0.00555,
+      "LIGHT_KICK": -0.00555,
+      "DPAD_LEFT": -0.00027749999999999997,
+      "JUMP_NEUTRAL_PUNCH": -0.00015,
+      "CROUCH_LIGHT_PUNCH": -0.00015,
+      "HEAVY_PUNCH": -0.00015,
+      "DPAD_UP": -0.00015,
+      "JUMP_FORWARD": -0.00015
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 0, \"time\": 1}": {
+      "WALK_RIGHT": -0.0010827269535445517,
+      "NEUTRAL": 0.0015002775917110302
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 0, \"time\": 2}": {
+      "WALK_RIGHT": -0.0011765858466218533,
+      "NEUTRAL": -0.005881132668470198,
+      "WALK_LEFT": 0.0017313742434670633
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 0, \"time\": 4}": {
+      "WALK_RIGHT": -0.0039675376565255,
+      "NEUTRAL": -0.0028307739939899663,
+      "LIGHT_PUNCH": -0.006
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 0, \"time\": 5}": {
+      "WALK_RIGHT": 0.030392380440961438,
+      "NEUTRAL": -0.0030074181730687377,
+      "WALK_LEFT": -0.0015,
+      "CROUCH_BLOCK": -0.001719909953949009
+    },
+    "{\"enemy\": 2, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 0}": {
+      "WALK_LEFT": 0.0,
+      "NEUTRAL": -0.0027252077669055997
+    },
+    "{\"enemy\": 2, \"last\": \"WALK_LEFT\", \"my\": 1, \"time\": 0}": {
+      "WALK_LEFT": -0.0002789380003064141
+    },
+    "{\"enemy\": 2, \"last\": \"WALK_LEFT\", \"my\": 1, \"time\": 1}": {
+      "WALK_LEFT": -0.0004191609427908711,
+      "NEUTRAL": -0.00010111680867244694,
+      "WALK_RIGHT": -0.00021655457957623622
+    },
+    "{\"enemy\": 2, \"last\": \"WALK_LEFT\", \"my\": 1, \"time\": 2}": {
+      "WALK_LEFT": 0.0004681650943896068,
+      "CROUCH_BLOCK": 0.000740561246753245
+    },
+    "{\"enemy\": 2, \"last\": \"CROUCH_BLOCK\", \"my\": 1, \"time\": 3}": {
+      "CROUCH_BLOCK": 0.003089032474120715
+    },
+    "{\"enemy\": 2, \"last\": \"CROUCH_BLOCK\", \"my\": 1, \"time\": 4}": {
+      "CROUCH_BLOCK": 0.0013067176983497142
+    },
+    "{\"enemy\": 2, \"last\": \"CROUCH_BLOCK\", \"my\": 1, \"time\": 5}": {
+      "LIGHT_PUNCH": 0.00039410609266368757
+    },
+    "{\"enemy\": 2, \"last\": \"LIGHT_PUNCH\", \"my\": 1, \"time\": 5}": {
+      "LIGHT_PUNCH": 0.004991718295446795
+    },
+    "{\"enemy\": 2, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 1}": {
+      "NEUTRAL": 0.00015194912118674767
+    },
+    "{\"enemy\": 2, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 2}": {
+      "NEUTRAL": -0.0008708668415424985
+    },
+    "{\"enemy\": 2, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 3}": {
+      "NEUTRAL": 0.0009121060683606126
+    },
+    "{\"enemy\": 2, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 4}": {
+      "NEUTRAL": 0.004475521358013888,
+      "LIGHT_PUNCH": 0.000782810111735459
+    },
+    "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 0}": {
+      "WALK_LEFT": -0.00555,
+      "NEUTRAL": -0.0077175,
+      "LIGHT_PUNCH": -0.003,
+      "CROUCH_BLOCK": -0.003,
+      "WALK_RIGHT": -0.003,
+      "STAND_BLOCK": -0.003,
+      "LIGHT_KICK": -0.003
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_LEFT\", \"my\": 19, \"time\": 0}": {
+      "WALK_LEFT": -0.0012348750000000003
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_LEFT\", \"my\": 19, \"time\": 1}": {
+      "WALK_LEFT": -0.009205759687499999
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_LEFT\", \"my\": 19, \"time\": 2}": {
+      "WALK_LEFT": -0.00555,
+      "NEUTRAL": -0.003
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_LEFT\", \"my\": 19, \"time\": 3}": {
+      "LIGHT_PUNCH": 0.0,
+      "WALK_LEFT": -0.0077175
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_PUNCH\", \"my\": 19, \"time\": 3}": {
+      "LIGHT_PUNCH": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_PUNCH\", \"my\": 19, \"time\": 4}": {
+      "LIGHT_PUNCH": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_PUNCH\", \"my\": 19, \"time\": 5}": {
+      "LIGHT_PUNCH": -0.0077175,
+      "NEUTRAL": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 1}": {
+      "NEUTRAL": -0.0077175,
+      "CROUCH_BLOCK": 0.0,
+      "STAND_BLOCK": 0.0,
+      "LIGHT_KICK": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 2}": {
+      "NEUTRAL": -0.015367661074335938,
+      "WALK_LEFT": 0.0,
+      "CROUCH_BLOCK": 0.0,
+      "WALK_RIGHT": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 3}": {
+      "WALK_RIGHT": 0.0,
+      "NEUTRAL": -0.019224809378309705,
+      "STAND_BLOCK": 0.0,
+      "CROUCH_BLOCK": 0.0,
+      "LIGHT_PUNCH": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_RIGHT\", \"my\": 19, \"time\": 3}": {
+      "WALK_RIGHT": 0.0,
+      "NEUTRAL": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_RIGHT\", \"my\": 19, \"time\": 4}": {
+      "WALK_RIGHT": -0.003
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_RIGHT\", \"my\": 19, \"time\": 5}": {
+      "WALK_RIGHT": -0.00555
+    },
+    "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 4}": {
+      "NEUTRAL": -0.01534106449921875,
+      "WALK_RIGHT": -0.003,
+      "LIGHT_KICK": -0.003,
+      "CROUCH_BLOCK": -0.003,
+      "WALK_LEFT": -0.00555,
+      "STAND_BLOCK": -0.003,
+      "LIGHT_PUNCH": -0.003
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_LEFT\", \"my\": 19, \"time\": 4}": {
+      "WALK_LEFT": -0.00555,
+      "NEUTRAL": -0.0034275000000000004
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_LEFT\", \"my\": 19, \"time\": 5}": {
+      "WALK_LEFT": -0.0028008937499999997
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_PUNCH\", \"my\": 19, \"time\": 0}": {
+      "LIGHT_PUNCH": -0.00555
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_PUNCH\", \"my\": 19, \"time\": 1}": {
+      "LIGHT_PUNCH": -0.0077175
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_PUNCH\", \"my\": 19, \"time\": 2}": {
+      "LIGHT_PUNCH": 0.0,
+      "NEUTRAL": -0.003
+    },
+    "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 5}": {
+      "NEUTRAL": -0.00555,
+      "STAND_BLOCK": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"CROUCH_BLOCK\", \"my\": 19, \"time\": 0}": {
+      "CROUCH_BLOCK": -0.00555
+    },
+    "{\"enemy\": 19, \"last\": \"CROUCH_BLOCK\", \"my\": 19, \"time\": 1}": {
+      "CROUCH_BLOCK": -0.0077175,
+      "NEUTRAL": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"CROUCH_BLOCK\", \"my\": 19, \"time\": 2}": {
+      "CROUCH_BLOCK": 0.0,
+      "NEUTRAL": -0.003
+    },
+    "{\"enemy\": 19, \"last\": \"CROUCH_BLOCK\", \"my\": 19, \"time\": 3}": {
+      "LIGHT_KICK": 0.0,
+      "CROUCH_BLOCK": 0.0,
+      "NEUTRAL": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 3}": {
+      "LIGHT_KICK": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 4}": {
+      "LIGHT_KICK": -0.003
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 5}": {
+      "LIGHT_KICK": -0.00555,
+      "NEUTRAL": 0.0
+    },
+    "{\"enemy\": 1, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 5}": {
+      "NEUTRAL": 0.0014923556017274464,
+      "LIGHT_PUNCH": -0.0015383297776648127
+    },
+    "{\"enemy\": 1, \"last\": \"LIGHT_PUNCH\", \"my\": 1, \"time\": 5}": {
+      "LIGHT_PUNCH": 0.0002632385890883964
+    },
+    "{\"enemy\": 1, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 0}": {
+      "STAND_BLOCK": 0.0,
+      "NEUTRAL": 0.0,
+      "HEAVY_KICK": -0.00015,
+      "DPAD_RIGHT": -0.00015,
+      "CROUCH_LIGHT_PUNCH": -6.27733356925087e-05,
+      "DPAD_UP": -0.00015,
+      "CROUCH_HEAVY_KICK": -0.00015
+    },
+    "{\"enemy\": 1, \"last\": \"STAND_BLOCK\", \"my\": 1, \"time\": 0}": {
+      "STAND_BLOCK": 0.0005061689522032227
+    },
+    "{\"enemy\": 2, \"last\": \"STAND_BLOCK\", \"my\": 1, \"time\": 0}": {
+      "STAND_BLOCK": -0.0013652858236231265
+    },
+    "{\"enemy\": 1, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 1}": {
+      "STAND_BLOCK": 0.0024296991031395477
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 1}": {
+      "NEUTRAL": 0.000824218926643966,
+      "STAND_BLOCK": 0.012616412962931544
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 0, \"time\": 1}": {
+      "NEUTRAL": 0.001600106749585094,
+      "WALK_LEFT": -0.0029989485561830085,
+      "WALK_RIGHT": -0.0030047033979667495,
+      "CROUCH_BLOCK": -0.0030011779504181013,
+      "STAND_BLOCK": -0.004434534933920192,
+      "LIGHT_PUNCH": -0.0029998805921915
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 0, \"time\": 2}": {
+      "NEUTRAL": -0.013472798029380933,
+      "WALK_LEFT": -0.005771637028929186,
+      "WALK_RIGHT": -0.00300338504723085,
+      "CROUCH_BLOCK": -0.002994022070751893,
+      "STAND_BLOCK": 0.002124051271676479
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 0, \"time\": 3}": {
+      "NEUTRAL": 0.005422198929714491,
+      "WALK_RIGHT": -0.001724383004251794,
+      "CROUCH_BLOCK": -0.0015,
+      "WALK_LEFT": -0.002994588536233735,
+      "STAND_BLOCK": -0.0030047186274289104,
+      "LIGHT_PUNCH": -0.003002897507191609
+    },
+    "{\"enemy\": 1, \"last\": \"NEUTRAL\", \"my\": 0, \"time\": 3}": {
+      "NEUTRAL": 0.0011413035303513867
+    },
+    "{\"enemy\": 1, \"last\": \"NEUTRAL\", \"my\": 0, \"time\": 4}": {
+      "NEUTRAL": -0.0018617360555847568
+    },
+    "{\"enemy\": 1, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 4}": {
+      "NEUTRAL": -0.0012479606476677608
+    },
+    "{\"enemy\": 2, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 5}": {
+      "NEUTRAL": -0.0017461794656865137
+    },
+    "{\"enemy\": 2, \"last\": \"WALK_RIGHT\", \"my\": 1, \"time\": 2}": {
+      "WALK_RIGHT": 0.0020389090371854593
+    },
+    "{\"enemy\": 2, \"last\": \"WALK_RIGHT\", \"my\": 1, \"time\": 3}": {
+      "WALK_RIGHT": 0.0020720574951201493
+    },
+    "{\"enemy\": 2, \"last\": \"WALK_RIGHT\", \"my\": 1, \"time\": 4}": {
+      "WALK_RIGHT": 0.0008175145046606065
+    },
+    "{\"enemy\": 2, \"last\": \"WALK_RIGHT\", \"my\": 1, \"time\": 5}": {
+      "WALK_RIGHT": 0.00016334296907292075
+    },
+    "{\"enemy\": 2, \"last\": \"WALK_RIGHT\", \"my\": 2, \"time\": 5}": {
+      "WALK_RIGHT": -2.3101006930827204e-06
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_RIGHT\", \"my\": 19, \"time\": 0}": {
+      "WALK_RIGHT": -0.00555
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_RIGHT\", \"my\": 19, \"time\": 1}": {
+      "WALK_RIGHT": -0.0077175,
+      "NEUTRAL": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"STAND_BLOCK\", \"my\": 19, \"time\": 5}": {
+      "STAND_BLOCK": -0.00555
+    },
+    "{\"enemy\": 19, \"last\": \"STAND_BLOCK\", \"my\": 19, \"time\": 3}": {
+      "STAND_BLOCK": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"STAND_BLOCK\", \"my\": 19, \"time\": 4}": {
+      "STAND_BLOCK": -0.003,
+      "NEUTRAL": 0.0
+    },
+    "{\"enemy\": 19, \"last\": \"STAND_BLOCK\", \"my\": 19, \"time\": 1}": {
+      "STAND_BLOCK": -0.0077175
+    },
+    "{\"enemy\": 19, \"last\": \"STAND_BLOCK\", \"my\": 19, \"time\": 2}": {
+      "STAND_BLOCK": 0.0,
+      "NEUTRAL": -0.003
+    },
+    "{\"enemy\": 19, \"last\": \"CROUCH_BLOCK\", \"my\": 19, \"time\": 4}": {
+      "CROUCH_BLOCK": -0.003
+    },
+    "{\"enemy\": 19, \"last\": \"CROUCH_BLOCK\", \"my\": 19, \"time\": 5}": {
+      "NEUTRAL": 0.0,
+      "CROUCH_BLOCK": -0.00555
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 1}": {
+      "LIGHT_KICK": -0.0077175
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 2}": {
+      "LIGHT_KICK": 0.0,
+      "NEUTRAL": -0.003
+    },
+    "{\"enemy\": 19, \"last\": \"WALK_RIGHT\", \"my\": 19, \"time\": 2}": {
+      "WALK_RIGHT": 0.0,
+      "NEUTRAL": -0.003
+    },
+    "{\"enemy\": 1, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 1}": {
+      "NEUTRAL": 3.0844155844152175e-06
+    },
+    "{\"enemy\": 1, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 2}": {
+      "NEUTRAL": 1.0064935064911518e-06
+    },
+    "{\"enemy\": 1, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 3}": {
+      "NEUTRAL": 1.558441558427437e-07
+    },
+    "{\"enemy\": 19, \"last\": \"STAND_BLOCK\", \"my\": 19, \"time\": 0}": {
+      "STAND_BLOCK": -0.00555
+    },
+    "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 0}": {
+      "LIGHT_KICK": 0.00298875
+    },
+    "{\"enemy\": 2, \"last\": \"WALK_LEFT\", \"my\": 1, \"time\": 3}": {
+      "WALK_LEFT": -0.00015
+    },
+    "{\"enemy\": 2, \"last\": \"WALK_LEFT\", \"my\": 1, \"time\": 4}": {
+      "WALK_LEFT": -9.333090909091346e-06
+    },
+    "{\"enemy\": 17, \"last\": \"NEUTRAL\", \"my\": 3, \"time\": 0}": {
+      "NEUTRAL": -0.00010757867252990875
+    },
+    "{\"enemy\": 17, \"last\": \"NEUTRAL\", \"my\": 3, \"time\": 1}": {
+      "NEUTRAL": -0.00038587499999999993
+    },
+    "{\"enemy\": 17, \"last\": \"NEUTRAL\", \"my\": 3, \"time\": 2}": {
+      "LIGHT_KICK": 1.6493610004125747e-05
+    },
+    "{\"enemy\": 17, \"last\": \"LIGHT_KICK\", \"my\": 3, \"time\": 2}": {
+      "LIGHT_KICK": 9.689180431488142e-06
+    },
+    "{\"enemy\": 17, \"last\": \"LIGHT_KICK\", \"my\": 3, \"time\": 3}": {
+      "LIGHT_KICK": -0.00014570133280681583
+    },
+    "{\"enemy\": 17, \"last\": \"LIGHT_KICK\", \"my\": 3, \"time\": 4}": {
+      "NEUTRAL": -0.00015
+    },
+    "{\"enemy\": 17, \"last\": \"NEUTRAL\", \"my\": 3, \"time\": 4}": {
+      "NEUTRAL": -2.85866863145634e-06
+    },
+    "{\"enemy\": 17, \"last\": \"NEUTRAL\", \"my\": 3, \"time\": 5}": {
+      "NEUTRAL": -0.0001407078631639315
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 0, \"time\": 4}": {
+      "NEUTRAL": -0.0038653563235111397,
+      "WALK_LEFT": -0.003003728684367844,
+      "WALK_RIGHT": -0.006,
+      "CROUCH_BLOCK": -0.0029977349589790543,
+      "STAND_BLOCK": 0.006041917833719632
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 0, \"time\": 5}": {
+      "WALK_LEFT": -0.004812839912693484,
+      "NEUTRAL": -0.003001893820326604,
+      "WALK_RIGHT": 0.005526955788924148
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 0, \"time\": 0}": {
+      "WALK_LEFT": -0.018287962610698323,
+      "NEUTRAL": -0.006,
+      "WALK_RIGHT": -0.002999883751617926
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 0, \"time\": 1}": {
+      "WALK_LEFT": -0.0022146076323542032,
+      "NEUTRAL": -0.0030005587802000313,
+      "WALK_RIGHT": -0.002785049081407208,
+      "CROUCH_BLOCK": -0.0029996778381942845
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 0, \"time\": 2}": {
+      "WALK_LEFT": 0.02156988706004808,
+      "NEUTRAL": 0.0016025471654092223
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 0, \"time\": 3}": {
+      "WALK_LEFT": 0.0016400698814490306,
+      "NEUTRAL": -0.0029989177525060785,
+      "WALK_RIGHT": -0.005785815469594973,
+      "STAND_BLOCK": -0.0033170862170807656,
+      "CROUCH_BLOCK": 0.0025509725398380877
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 0, \"time\": 4}": {
+      "WALK_LEFT": -0.002589394163078854,
+      "NEUTRAL": -0.003000029046352481,
+      "WALK_RIGHT": -0.002905786662700927,
+      "CROUCH_BLOCK": -0.00014634609483632873,
+      "STAND_BLOCK": 0.0024143603388969907
+    },
+    "{\"enemy\": 1, \"last\": \"WALK_LEFT\", \"my\": 0, \"time\": 2}": {
+      "WALK_LEFT": -0.00015,
+      "NEUTRAL": 0.0019649169712793713
+    },
+    "{\"enemy\": 1, \"last\": \"NEUTRAL\", \"my\": 0, \"time\": 2}": {
+      "NEUTRAL": 0.0015745445430809398
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 0, \"time\": 5}": {
+      "NEUTRAL": -0.02024437615086426,
+      "WALK_LEFT": -0.006,
+      "WALK_RIGHT": -0.0030006811166938697,
+      "CROUCH_BLOCK": -0.003003229508261367,
+      "STAND_BLOCK": -0.002999936161721429,
+      "LIGHT_PUNCH": -0.00299993602519932,
+      "LIGHT_KICK": -0.0029989903998005486
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 0, \"time\": 3}": {
+      "WALK_RIGHT": -0.005047332827914645,
+      "NEUTRAL": 0.0015030493361756281
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 0, \"time\": 0}": {
+      "WALK_RIGHT": -0.020505334763103913,
+      "NEUTRAL": -0.002997428151408247,
+      "WALK_LEFT": -0.006
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 0, \"time\": 3}": {
+      "CROUCH_BLOCK": -0.00017507997122549485,
+      "NEUTRAL": -0.0029986504754408324
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 0, \"time\": 4}": {
+      "CROUCH_BLOCK": -0.013694945617777766,
+      "NEUTRAL": -0.003001240667411029,
+      "WALK_LEFT": -0.003001718826079201,
+      "WALK_RIGHT": -0.006
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 0, \"time\": 0}": {
+      "CROUCH_BLOCK": -0.01229682890737956,
+      "NEUTRAL": -0.003001126354783511,
+      "WALK_LEFT": -0.003003357431503651
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 0, \"time\": 1}": {
+      "CROUCH_BLOCK": -0.005064443795898684
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 0, \"time\": 2}": {
+      "CROUCH_BLOCK": -0.004756569887494221,
+      "NEUTRAL": -0.003002383156040062,
+      "WALK_LEFT": -0.002771584711111649
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_PUNCH\", \"my\": 0, \"time\": 4}": {
+      "LIGHT_PUNCH": -0.007115472131474549,
+      "LIGHT_KICK": -0.0029997992878135096,
+      "NEUTRAL": -5.910647943123404e-07
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_PUNCH\", \"my\": 0, \"time\": 5}": {
+      "NEUTRAL": -0.0030032583326580135,
+      "LIGHT_PUNCH": -0.0014550189499218746,
+      "MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 0}": {
+      "STAND_BLOCK": 0.048112983112983766
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 2}": {
+      "STAND_BLOCK": 0.013344729772480008,
+      "NEUTRAL": -0.0047068031766298105,
+      "LIGHT_PUNCH": -0.003027781719669331,
+      "WALK_LEFT": 0.015958254538080557
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_PUNCH\", \"my\": 0, \"time\": 0}": {
+      "LIGHT_PUNCH": 0.009188440783815057,
+      "NEUTRAL": -0.002999994066520952
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 3}": {
+      "STAND_BLOCK": 0.008885816683378418
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 4}": {
+      "STAND_BLOCK": 0.019367123980847226,
+      "NEUTRAL": -0.00300225915424223,
+      "WALK_RIGHT": 0.0
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 5}": {
+      "STAND_BLOCK": 0.01605696348816877,
+      "NEUTRAL": -0.003002034930398883,
+      "WALK_LEFT": 0.0030764320779423774
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 0, \"time\": 0}": {
+      "LIGHT_KICK": -0.0033565421093603907,
+      "NEUTRAL": -0.0034272210180045304,
+      "WALK_LEFT": -0.006,
+      "MEDIUM_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_PUNCH\", \"my\": 0, \"time\": 1}": {
+      "LIGHT_PUNCH": 0.0007561093600644082,
+      "NEUTRAL": 0.003029385588145692,
+      "MEDIUM_PUNCH": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_PUNCH\", \"my\": 0, \"time\": 2}": {
+      "LIGHT_PUNCH": 0.010453487180987016,
+      "NEUTRAL": -0.006,
+      "MEDIUM_PUNCH": 0.001095
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_PUNCH\", \"my\": 0, \"time\": 3}": {
+      "LIGHT_PUNCH": -0.0033954307872932797,
+      "NEUTRAL": -0.0030079864309679382,
+      "MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 0, \"time\": 4}": {
+      "LIGHT_KICK": -0.005239534234851842,
+      "MEDIUM_KICK": 0.001095
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 0, \"time\": 5}": {
+      "NEUTRAL": -0.006,
+      "MEDIUM_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 0, \"time\": 5}": {
+      "NEUTRAL": -0.006,
+      "CROUCH_BLOCK": -0.009481202142403868,
+      "WALK_LEFT": -0.002998557238565621,
+      "WALK_RIGHT": -0.006
+    },
+    "{\"enemy\": 5, \"last\": \"NEUTRAL\", \"my\": 5, \"time\": 0}": {
+      "NEUTRAL": -0.00027749999999999997
+    },
+    "{\"enemy\": 5, \"last\": \"NEUTRAL\", \"my\": 5, \"time\": 1}": {
+      "NEUTRAL": -0.00027749999999999997
+    },
+    "{\"enemy\": 5, \"last\": \"NEUTRAL\", \"my\": 5, \"time\": 2}": {
+      "NEUTRAL": -0.00015,
+      "WALK_LEFT": -0.00015
+    },
+    "{\"enemy\": 5, \"last\": \"WALK_LEFT\", \"my\": 5, \"time\": 3}": {
+      "WALK_LEFT": -0.00038587499999999993
+    },
+    "{\"enemy\": 5, \"last\": \"WALK_LEFT\", \"my\": 5, \"time\": 4}": {
+      "WALK_LEFT": -0.00027749999999999997
+    },
+    "{\"enemy\": 5, \"last\": \"WALK_LEFT\", \"my\": 5, \"time\": 5}": {
+      "NEUTRAL": -0.00015
+    },
+    "{\"enemy\": 5, \"last\": \"NEUTRAL\", \"my\": 5, \"time\": 5}": {
+      "NEUTRAL": -0.00027749999999999997
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 6, \"time\": 0}": {
+      "NEUTRAL": 0.0
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 6, \"time\": 1}": {
+      "NEUTRAL": -1.7421602787475575e-06
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 6, \"time\": 3}": {
+      "NEUTRAL": -0.00015
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 6, \"time\": 4}": {
+      "NEUTRAL": -2.090592334495156e-05
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 3, \"time\": 0}": {
+      "NEUTRAL": -0.00015
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 3, \"time\": 1}": {
+      "NEUTRAL": -0.00015339988289292327
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 3, \"time\": 2}": {
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 3, \"time\": 3}": {
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 3, \"time\": 4}": {
+      "NEUTRAL": -0.00015226661535244347
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 3, \"time\": 5}": {
+      "NEUTRAL": -0.00014858339550653053
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 17, \"time\": 0}": {
+      "NEUTRAL": 0.0037408392541935895,
+      "STAND_BLOCK": -0.00016045296167247578,
+      "DPAD_LEFT": -0.00015,
+      "DPAD_UP": -0.00015,
+      "LIGHT_PUNCH": -0.00015,
+      "MEDIUM_PUNCH": -0.00015,
+      "CROUCH_LIGHT_PUNCH": -0.00015,
+      "CROUCH_HEAVY_KICK": -0.00015,
+      "JUMP_NEUTRAL": -0.00015
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 17, \"time\": 1}": {
+      "NEUTRAL": 0.008330768883591796,
+      "WALK_LEFT": -0.0003,
+      "WALK_RIGHT": -0.0003,
+      "CROUCH_BLOCK": -0.0003,
+      "STAND_BLOCK": -0.0003,
+      "LIGHT_PUNCH": -0.0003,
+      "MEDIUM_PUNCH": -9.891869218281266e-05
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 17, \"time\": 1}": {
+      "WALK_LEFT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 17, \"time\": 2}": {
+      "WALK_LEFT": 0.02149093912795981,
+      "MEDIUM_KICK": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 17, \"time\": 3}": {
+      "WALK_LEFT": 0.003172074909387162
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 17, \"time\": 4}": {
+      "WALK_LEFT": -0.0007811544109382309,
+      "NEUTRAL": -0.0003,
+      "WALK_RIGHT": -0.0003,
+      "CROUCH_BLOCK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 17, \"time\": 5}": {
+      "NEUTRAL": -0.00010674049582602271,
+      "WALK_LEFT": -0.0003,
+      "WALK_RIGHT": -0.000244594944609375
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 17, \"time\": 1}": {
+      "WALK_RIGHT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 17, \"time\": 2}": {
+      "WALK_RIGHT": -0.0009559874999999999,
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 17, \"time\": 2}": {
+      "NEUTRAL": -0.0007717499999999999,
+      "WALK_LEFT": 0.0009182975687865208
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 17, \"time\": 3}": {
+      "NEUTRAL": -0.001444309286526285,
+      "WALK_LEFT": 0.00036724256724150186
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 17, \"time\": 5}": {
+      "WALK_RIGHT": 0.00038880740625000013,
+      "LIGHT_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 16, \"time\": 0}": {
+      "NEUTRAL": -0.00015,
+      "HEAVY_PUNCH": -0.00015
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 17, \"time\": 1}": {
+      "CROUCH_BLOCK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 17, \"time\": 2}": {
+      "CROUCH_BLOCK": -0.0009559874999999999,
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 17, \"time\": 4}": {
+      "CROUCH_BLOCK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 17, \"time\": 5}": {
+      "CROUCH_BLOCK": -0.0009559874999999999,
+      "NEUTRAL": -9.714915828213355e-05
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 17, \"time\": 1}": {
+      "STAND_BLOCK": 0.002221443830428823
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 17, \"time\": 2}": {
+      "STAND_BLOCK": 0.002315660164715554
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 17, \"time\": 3}": {
+      "STAND_BLOCK": -3.4629665824218565e-05
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 17, \"time\": 4}": {
+      "STAND_BLOCK": -0.0009559874999999999,
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 17, \"time\": 4}": {
+      "NEUTRAL": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 17, \"time\": 5}": {
+      "WALK_LEFT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 17, \"time\": 0}": {
+      "STAND_BLOCK": 0.008322557448629312
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_LEFT\", \"my\": 17, \"time\": 0}": {
+      "DPAD_LEFT": 0.0017733859777089842
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_LEFT\", \"my\": 17, \"time\": 1}": {
+      "DPAD_LEFT": -0.0012922784524806751
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_LEFT\", \"my\": 17, \"time\": 2}": {
+      "DPAD_LEFT": 0.0014651786768765623
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_LEFT\", \"my\": 17, \"time\": 3}": {
+      "DPAD_LEFT": -0.0003,
+      "DPAD_RIGHT": -0.00016045296167247578
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_RIGHT\", \"my\": 17, \"time\": 3}": {
+      "DPAD_RIGHT": -0.0011728565425740427
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_RIGHT\", \"my\": 17, \"time\": 4}": {
+      "DPAD_RIGHT": -0.0013453066986792407
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_RIGHT\", \"my\": 17, \"time\": 5}": {
+      "DPAD_RIGHT": -0.001210929443255393
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 17, \"time\": 0}": {
+      "DPAD_UP": 0.0023738544592225574
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 17, \"time\": 1}": {
+      "DPAD_UP": 0.004118075643944644
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 17, \"time\": 2}": {
+      "DPAD_UP": 0.012489753723006269
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_UP\", \"my\": 17, \"time\": 2}": {
+      "DPAD_UP": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 17, \"time\": 3}": {
+      "DPAD_UP": -0.0005549999999999999,
+      "DPAD_DOWN": -0.00016045296167247578
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_DOWN\", \"my\": 17, \"time\": 3}": {
+      "DPAD_DOWN": -0.0012457009687499997
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_DOWN\", \"my\": 17, \"time\": 4}": {
+      "DPAD_DOWN": -0.001336403967343479
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_DOWN\", \"my\": 17, \"time\": 5}": {
+      "DPAD_DOWN": -0.001373415541629888
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_PUNCH\", \"my\": 17, \"time\": 0}": {
+      "LIGHT_PUNCH": 0.0019400844390703917
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_PUNCH\", \"my\": 17, \"time\": 1}": {
+      "LIGHT_PUNCH": -0.0014112915833455072,
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_PUNCH\", \"my\": 17, \"time\": 2}": {
+      "LIGHT_PUNCH": 0.0006328502740970064
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_PUNCH\", \"my\": 17, \"time\": 3}": {
+      "LIGHT_PUNCH": -0.0014550189499218746
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_PUNCH\", \"my\": 17, \"time\": 4}": {
+      "LIGHT_PUNCH": -0.001026890050087109,
+      "MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_PUNCH\", \"my\": 17, \"time\": 4}": {
+      "MEDIUM_PUNCH": -0.0006322029616724757
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_PUNCH\", \"my\": 17, \"time\": 5}": {
+      "MEDIUM_PUNCH": -0.0013821745237459174
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_PUNCH\", \"my\": 17, \"time\": 0}": {
+      "MEDIUM_PUNCH": 0.0004265853679687499
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_PUNCH\", \"my\": 17, \"time\": 1}": {
+      "MEDIUM_PUNCH": 0.0014944531978261628,
+      "JUMP_FORWARD": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_PUNCH\", \"my\": 17, \"time\": 2}": {
+      "MEDIUM_PUNCH": -0.0013821745237459174
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_PUNCH\", \"my\": 17, \"time\": 3}": {
+      "MEDIUM_PUNCH": -0.0004154529616724758,
+      "HEAVY_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 17, \"time\": 3}": {
+      "HEAVY_PUNCH": 0.0001477885536301563
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 17, \"time\": 4}": {
+      "HEAVY_PUNCH": 0.0014111923722449995
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 17, \"time\": 5}": {
+      "HEAVY_PUNCH": -0.0010397449488240428
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 16, \"time\": 5}": {
+      "HEAVY_PUNCH": -0.003945192726480839
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 16, \"time\": 0}": {
+      "HEAVY_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 15, \"time\": 0}": {
+      "HEAVY_PUNCH": -0.003973677047038317
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 15, \"time\": 1}": {
+      "HEAVY_PUNCH": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 13, \"time\": 1}": {
+      "HEAVY_PUNCH": -0.0041855625,
+      "LIGHT_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 13, \"time\": 1}": {
+      "LIGHT_KICK": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 13, \"time\": 2}": {
+      "LIGHT_KICK": -0.0013979181265004437
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 13, \"time\": 3}": {
+      "LIGHT_KICK": -0.0013094606315049288
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 13, \"time\": 4}": {
+      "LIGHT_KICK": -0.0014359433722419572
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 13, \"time\": 5}": {
+      "LIGHT_KICK": 0.0009429924667817878
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 13, \"time\": 0}": {
+      "MEDIUM_KICK": -0.00015,
+      "NEUTRAL": -0.0002292097993079443,
+      "WALK_LEFT": -0.0003,
+      "WALK_RIGHT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 13, \"time\": 0}": {
+      "MEDIUM_KICK": 0.00208073328710229
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 13, \"time\": 1}": {
+      "MEDIUM_KICK": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 11, \"time\": 1}": {
+      "MEDIUM_KICK": -0.003478246171058363
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 11, \"time\": 2}": {
+      "MEDIUM_KICK": 0.0015395063392537878
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 10, \"time\": 2}": {
+      "MEDIUM_KICK": -0.004452635017421604
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 10, \"time\": 3}": {
+      "MEDIUM_KICK": 0.0014760956372208633
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 10, \"time\": 4}": {
+      "MEDIUM_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 9, \"time\": 4}": {
+      "MEDIUM_KICK": -0.004084739764808364,
+      "HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_KICK\", \"my\": 9, \"time\": 4}": {
+      "HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_KICK\", \"my\": 7, \"time\": 4}": {
+      "HEAVY_KICK": -0.004885452961672475
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_KICK\", \"my\": 7, \"time\": 5}": {
+      "HEAVY_KICK": 0.005478053616008818
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_KICK\", \"my\": 5, \"time\": 5}": {
+      "HEAVY_KICK": 0.0004725961999128976
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 5, \"time\": 0}": {
+      "HEAVY_KICK": -0.00015
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_KICK\", \"my\": 0, \"time\": 0}": {
+      "HEAVY_KICK": -0.002664447517421603
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_KICK\", \"my\": 0, \"time\": 1}": {
+      "HEAVY_KICK": 0.0021649710631825234,
+      "CROUCH_LIGHT_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_KICK\", \"my\": 0, \"time\": 2}": {
+      "HEAVY_KICK": 0.005479100218796277,
+      "CROUCH_LIGHT_PUNCH": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 0, \"time\": 2}": {
+      "CROUCH_LIGHT_PUNCH": -4.35750358903171e-05,
+      "CROUCH_MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 0, \"time\": 3}": {
+      "CROUCH_LIGHT_PUNCH": 0.0008229465870638169
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 0, \"time\": 4}": {
+      "CROUCH_LIGHT_PUNCH": -0.0019088011033305539,
+      "CROUCH_MEDIUM_PUNCH": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 0, \"time\": 5}": {
+      "CROUCH_LIGHT_PUNCH": -0.001266403496700896,
+      "CROUCH_MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 16, \"time\": 5}": {
+      "CROUCH_LIGHT_PUNCH": 6.517698279617594e-05
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 17, \"time\": 5}": {
+      "CROUCH_LIGHT_PUNCH": 0.0027379989657565487
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 17, \"time\": 0}": {
+      "CROUCH_LIGHT_PUNCH": -0.0011125893749999998
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 17, \"time\": 1}": {
+      "CROUCH_MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 17, \"time\": 1}": {
+      "CROUCH_MEDIUM_PUNCH": -0.0013588458234374996
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 17, \"time\": 2}": {
+      "CROUCH_MEDIUM_PUNCH": 0.0012111318111537718
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 17, \"time\": 3}": {
+      "CROUCH_MEDIUM_PUNCH": -0.0014550189499218746
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 17, \"time\": 4}": {
+      "CROUCH_MEDIUM_PUNCH": 0.0022870357289994994
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 17, \"time\": 5}": {
+      "CROUCH_MEDIUM_PUNCH": -0.0005549999999999999,
+      "CROUCH_HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 17, \"time\": 5}": {
+      "CROUCH_HEAVY_KICK": 0.0016255338057773639
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 17, \"time\": 0}": {
+      "CROUCH_HEAVY_KICK": 0.0001233859777089843
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 17, \"time\": 1}": {
+      "CROUCH_HEAVY_KICK": 0.0009519889108954837
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 17, \"time\": 2}": {
+      "CROUCH_HEAVY_KICK": 0.00270071889292128
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 17, \"time\": 3}": {
+      "CROUCH_HEAVY_KICK": -0.0003,
+      "JUMP_NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL\", \"my\": 17, \"time\": 3}": {
+      "JUMP_NEUTRAL": 0.017432045324297568
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_NEUTRAL\", \"my\": 17, \"time\": 3}": {
+      "JUMP_NEUTRAL": 0.0026898750000000004
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL\", \"my\": 17, \"time\": 4}": {
+      "JUMP_NEUTRAL": 0.022526051707949527
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL\", \"my\": 17, \"time\": 5}": {
+      "JUMP_NEUTRAL": 0.021832976075998593
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL\", \"my\": 17, \"time\": 0}": {
+      "JUMP_NEUTRAL": 0.010550503746189023
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL\", \"my\": 17, \"time\": 1}": {
+      "JUMP_NEUTRAL": 0.0025365853658536578,
+      "JUMP_NEUTRAL_PUNCH": 0.0014790940766550686
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 17, \"time\": 1}": {
+      "JUMP_NEUTRAL_PUNCH": 0.009409061101791785
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 17, \"time\": 2}": {
+      "JUMP_NEUTRAL_PUNCH": 0.005227240366795597
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 17, \"time\": 3}": {
+      "JUMP_NEUTRAL_PUNCH": 0.005321431518572698
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 17, \"time\": 4}": {
+      "JUMP_NEUTRAL_PUNCH": 0.0036284868253848228
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 17, \"time\": 5}": {
+      "JUMP_NEUTRAL_PUNCH": 0.004676056249937387,
+      "JUMP_FORWARD": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 17, \"time\": 5}": {
+      "JUMP_FORWARD": 0.00376851159375
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 17, \"time\": 1}": {
+      "JUMP_FORWARD": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 17, \"time\": 2}": {
+      "MEDIUM_KICK": 0.0029679224738675914
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 16, \"time\": 2}": {
+      "MEDIUM_KICK": -0.0071550522648083665,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 16, \"time\": 2}": {
+      "NEUTRAL": 0.0029470949477351837
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 16, \"time\": 3}": {
+      "NEUTRAL": 0.003196058143286544,
+      "WALK_LEFT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 16, \"time\": 3}": {
+      "WALK_LEFT": -0.0003,
+      "NEUTRAL": 0.0014895470383275442
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 16, \"time\": 4}": {
+      "NEUTRAL": 0.0008782500000000001,
+      "WALK_LEFT": -0.0003,
+      "CROUCH_BLOCK": 0.001489547038327524
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 16, \"time\": 4}": {
+      "WALK_LEFT": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 16, \"time\": 4}": {
+      "CROUCH_BLOCK": -3.2010712478028005e-05,
+      "NEUTRAL": 4.1354529616720574e-05
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 16, \"time\": 5}": {
+      "NEUTRAL": 0.0008814160900016427,
+      "WALK_LEFT": -0.0003,
+      "CROUCH_LIGHT_PUNCH": -0.000107625
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 16, \"time\": 5}": {
+      "WALK_LEFT": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 15, \"time\": 0}": {
+      "NEUTRAL": -0.0001555060653123225,
+      "WALK_LEFT": -0.00014128919860627176
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 15, \"time\": 0}": {
+      "WALK_LEFT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 15, \"time\": 1}": {
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 15, \"time\": 1}": {
+      "NEUTRAL": 0.014022569873373698,
+      "DPAD_UP": -0.0003,
+      "WALK_RIGHT": 0.0015087108013937282
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 15, \"time\": 1}": {
+      "DPAD_UP": -0.0003,
+      "NEUTRAL": -0.0028699027438017096
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 16, \"time\": 1}": {
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 15, \"time\": 1}": {
+      "WALK_RIGHT": -0.0003,
+      "NEUTRAL": 0.003099741688792681
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 15, \"time\": 2}": {
+      "NEUTRAL": -1.2158380113311067e-05,
+      "WALK_LEFT": -0.0003,
+      "WALK_RIGHT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 15, \"time\": 2}": {
+      "WALK_LEFT": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 15, \"time\": 3}": {
+      "WALK_RIGHT": -0.0003,
+      "NEUTRAL": 0.0015087108013937282
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 15, \"time\": 3}": {
+      "NEUTRAL": 0.0014208787814441507,
+      "CROUCH_HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 15, \"time\": 3}": {
+      "CROUCH_HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 14, \"time\": 3}": {
+      "NEUTRAL": -0.007249128919860627
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 14, \"time\": 3}": {
+      "NEUTRAL": -0.0001021721391883862,
+      "WALK_LEFT": 0.00031480928811257404
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 14, \"time\": 4}": {
+      "NEUTRAL": 0.0030406821295600292,
+      "WALK_RIGHT": -0.0003,
+      "WALK_LEFT": -0.0003,
+      "JUMP_FORWARD": -0.0003,
+      "DPAD_UP": -0.0003,
+      "JUMP_NEUTRAL": -0.00016045296167245578
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 14, \"time\": 4}": {
+      "WALK_RIGHT": -0.0003,
+      "NEUTRAL": 0.0015087108013937282
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 14, \"time\": 5}": {
+      "NEUTRAL": 0.0005161570826452023,
+      "WALK_LEFT": -0.000362625,
+      "JUMP_FORWARD_KICK": -0.0003,
+      "MEDIUM_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 14, \"time\": 5}": {
+      "WALK_LEFT": -0.000227720818815331,
+      "NEUTRAL": 0.002893392767626391
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 14, \"time\": 0}": {
+      "NEUTRAL": -0.0005800132223728648,
+      "WALK_LEFT": -0.00014128919860627176,
+      "WALK_RIGHT": -0.0003,
+      "CROUCH_BLOCK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 14, \"time\": 0}": {
+      "WALK_LEFT": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 14, \"time\": 1}": {
+      "NEUTRAL": 0.011688768829564484,
+      "WALK_LEFT": -0.0003,
+      "WALK_RIGHT": -0.0003,
+      "LIGHT_KICK": -0.0003,
+      "CROUCH_BLOCK": -0.0003,
+      "STAND_BLOCK": -0.0003,
+      "JUMP_FORWARD": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 14, \"time\": 1}": {
+      "WALK_LEFT": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 14, \"time\": 1}": {
+      "WALK_RIGHT": -0.0003,
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 14, \"time\": 2}": {
+      "NEUTRAL": 0.0003550751022248221,
+      "WALK_LEFT": -0.0003,
+      "WALK_RIGHT": -0.0005549999999999999,
+      "CROUCH_BLOCK": -0.0003,
+      "STAND_BLOCK": -5.8777489997344494e-05,
+      "DPAD_DOWN": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 14, \"time\": 2}": {
+      "WALK_LEFT": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 14, \"time\": 2}": {
+      "WALK_RIGHT": -0.0005549999999999999,
+      "NEUTRAL": -0.0003,
+      "WALK_LEFT": 0.0015423750000000001
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 14, \"time\": 4}": {
+      "WALK_LEFT": -0.00031572007117522746,
+      "NEUTRAL": 0.0024506405886272004
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 14, \"time\": 4}": {
+      "JUMP_FORWARD": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 13, \"time\": 4}": {
+      "NEUTRAL": -0.006606271777003503
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 10, \"time\": 4}": {
+      "NEUTRAL": -0.0075
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 14, \"time\": 0}": {
+      "WALK_RIGHT": -0.0003,
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 14, \"time\": 1}": {
+      "LIGHT_KICK": -0.0003,
+      "NEUTRAL": 0.0014951756947059467
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 14, \"time\": 1}": {
+      "CROUCH_BLOCK": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 14, \"time\": 2}": {
+      "STAND_BLOCK": -0.00031377748999734446,
+      "NEUTRAL": 0.002788871112296542
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 14, \"time\": 3}": {
+      "WALK_LEFT": 0.006123705765015016
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 14, \"time\": 4}": {
+      "DPAD_UP": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 7, \"time\": 4}": {
+      "NEUTRAL": -0.0075
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 7, \"time\": 4}": {
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 8, \"time\": 4}": {
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL\", \"my\": 14, \"time\": 4}": {
+      "JUMP_NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL\", \"my\": 7, \"time\": 4}": {
+      "JUMP_FORWARD": -0.0075
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 6, \"time\": 4}": {
+      "JUMP_FORWARD": -0.002482578397212543
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 7, \"time\": 4}": {
+      "NEUTRAL": 0.0015423750000000001
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 14, \"time\": 5}": {
+      "JUMP_FORWARD_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 7, \"time\": 5}": {
+      "NEUTRAL": -0.0075
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 7, \"time\": 5}": {
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 6, \"time\": 5}": {
+      "NEUTRAL": -0.006444250871080143
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 14, \"time\": 0}": {
+      "CROUCH_BLOCK": -0.0003,
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 14, \"time\": 1}": {
+      "JUMP_FORWARD": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 14, \"time\": 2}": {
+      "CROUCH_BLOCK": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_DOWN\", \"my\": 14, \"time\": 2}": {
+      "DPAD_DOWN": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_DOWN\", \"my\": 14, \"time\": 3}": {
+      "NEUTRAL": -0.00027159650361143075
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 14, \"time\": 5}": {
+      "MEDIUM_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 13, \"time\": 5}": {
+      "NEUTRAL": -0.0075
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 13, \"time\": 5}": {
+      "NEUTRAL": 0.006085771961974837
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 13, \"time\": 0}": {
+      "WALK_LEFT": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 13, \"time\": 1}": {
+      "WALK_RIGHT": -0.0003,
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 13, \"time\": 1}": {
+      "NEUTRAL": 0.0007320759374999999,
+      "LIGHT_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 12, \"time\": 1}": {
+      "NEUTRAL": -0.00399825783972124
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 12, \"time\": 1}": {
+      "NEUTRAL": 0.0040197009375000006,
+      "HEAVY_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 12, \"time\": 1}": {
+      "HEAVY_PUNCH": -0.0003,
+      "NEUTRAL": 0.0019228073835937502
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 11, \"time\": 1}": {
+      "NEUTRAL": -0.0075,
+      "WALK_LEFT": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 11, \"time\": 1}": {
+      "WALK_LEFT": 0.006649506531615236
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 11, \"time\": 2}": {
+      "NEUTRAL": 0.0008475000000000002,
+      "WALK_LEFT": -0.000107625
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 11, \"time\": 2}": {
+      "NEUTRAL": -0.0005800199335579978,
+      "WALK_LEFT": -0.000107625,
+      "WALK_RIGHT": -0.0003,
+      "CROUCH_BLOCK": -0.0003,
+      "STAND_BLOCK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 11, \"time\": 2}": {
+      "WALK_RIGHT": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 11, \"time\": 2}": {
+      "CROUCH_BLOCK": -0.0003,
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 11, \"time\": 2}": {
+      "STAND_BLOCK": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 11, \"time\": 3}": {
+      "NEUTRAL": -0.0004200422759826615,
+      "WALK_LEFT": -0.0003,
+      "WALK_RIGHT": -0.0003,
+      "CROUCH_BLOCK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 11, \"time\": 3}": {
+      "WALK_LEFT": -0.0003,
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 11, \"time\": 3}": {
+      "WALK_RIGHT": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 11, \"time\": 3}": {
+      "CROUCH_BLOCK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_BLOCK\", \"my\": 11, \"time\": 4}": {
+      "NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 11, \"time\": 4}": {
+      "NEUTRAL": -0.0005372234480128738,
+      "WALK_LEFT": -0.0003,
+      "WALK_RIGHT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 11, \"time\": 4}": {
+      "WALK_LEFT": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_RIGHT\", \"my\": 11, \"time\": 4}": {
+      "WALK_RIGHT": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 11, \"time\": 5}": {
+      "NEUTRAL": -0.0005549999999999999,
+      "JUMP_FORWARD": -0.0003,
+      "WALK_LEFT": 0.003277003484320557
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 11, \"time\": 5}": {
+      "JUMP_FORWARD": -0.0003,
+      "NEUTRAL": 0.00135
+    },
+    "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 9, \"time\": 5}": {
+      "NEUTRAL": -0.0075
+    },
+    "{\"enemy\": 0, \"last\": \"WALK_LEFT\", \"my\": 11, \"time\": 5}": {
+      "WALK_LEFT": 0.006971239295811181
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_LEFT\", \"my\": 0, \"time\": 0}": {
+      "DPAD_LEFT": 0.0019849351503127793,
+      "DPAD_RIGHT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_RIGHT\", \"my\": 0, \"time\": 0}": {
+      "DPAD_RIGHT": -0.0013588458234374996,
+      "DPAD_UP": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 0, \"time\": 0}": {
+      "DPAD_UP": -0.001665313512620771,
+      "DPAD_DOWN": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 0, \"time\": 1}": {
+      "DPAD_UP": 0.0007821707881101054,
+      "DPAD_DOWN": -0.00037752373750698826
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_DOWN\", \"my\": 0, \"time\": 1}": {
+      "DPAD_DOWN": 0.0016902692834237173,
+      "LIGHT_PUNCH": 0.00013168744631076112
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_PUNCH\", \"my\": 0, \"time\": 1}": {
+      "MEDIUM_PUNCH": -0.0017581890128685069,
+      "HEAVY_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_PUNCH\", \"my\": 0, \"time\": 2}": {
+      "MEDIUM_PUNCH": 1.7961748703270754e-05,
+      "HEAVY_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 0, \"time\": 2}": {
+      "HEAVY_PUNCH": -0.0018514978275278714,
+      "LIGHT_KICK": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 0, \"time\": 2}": {
+      "LIGHT_KICK": -0.001825291561797496,
+      "MEDIUM_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"LIGHT_KICK\", \"my\": 0, \"time\": 3}": {
+      "LIGHT_KICK": -0.0016062511913185543,
+      "MEDIUM_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 0, \"time\": 3}": {
+      "MEDIUM_KICK": -0.0017581890128685069,
+      "HEAVY_KICK": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_KICK\", \"my\": 0, \"time\": 3}": {
+      "HEAVY_KICK": -0.001892707180388887,
+      "CROUCH_LIGHT_PUNCH": 0.0003195120065125606
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_KICK\", \"my\": 0, \"time\": 4}": {
+      "HEAVY_KICK": -0.0016062511913185543,
+      "CROUCH_LIGHT_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 0, \"time\": 4}": {
+      "CROUCH_MEDIUM_PUNCH": -0.0019088011033305539,
+      "CROUCH_HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 0, \"time\": 5}": {
+      "CROUCH_MEDIUM_PUNCH": -0.001665313512620771,
+      "CROUCH_HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 0, \"time\": 5}": {
+      "CROUCH_HEAVY_KICK": -0.001665313512620771,
+      "JUMP_NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL\", \"my\": 0, \"time\": 5}": {
+      "JUMP_NEUTRAL": -0.0019224809378309707,
+      "JUMP_NEUTRAL_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 0, \"time\": 0}": {
+      "JUMP_NEUTRAL_PUNCH": -0.001665313512620771,
+      "JUMP_FORWARD": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 0, \"time\": 0}": {
+      "JUMP_FORWARD": -0.001825291561797496,
+      "JUMP_FORWARD_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 0, \"time\": 1}": {
+      "JUMP_FORWARD": -0.0003,
+      "JUMP_FORWARD_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 0, \"time\": 1}": {
+      "JUMP_FORWARD_KICK": -0.001665313512620771,
+      "JUMP_BACK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_BACK\", \"my\": 0, \"time\": 1}": {
+      "JUMP_BACK": -0.001892707180388887,
+      "DPAD_LEFT": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_LEFT\", \"my\": 0, \"time\": 1}": {
+      "DPAD_LEFT": -0.0014550189499218746,
+      "DPAD_RIGHT": -0.00043635888501742157
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_LEFT\", \"my\": 0, \"time\": 2}": {
+      "DPAD_LEFT": -0.0012457009687499997,
+      "DPAD_RIGHT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_RIGHT\", \"my\": 0, \"time\": 2}": {
+      "DPAD_RIGHT": -0.0013588458234374996,
+      "DPAD_UP": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 0, \"time\": 2}": {
+      "DPAD_UP": -0.001665313512620771,
+      "DPAD_DOWN": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_DOWN\", \"my\": 0, \"time\": 2}": {
+      "DPAD_DOWN": -0.0011452657209636147,
+      "LIGHT_PUNCH": 0.002578531923759973
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_DOWN\", \"my\": 0, \"time\": 3}": {
+      "DPAD_DOWN": -0.0009559874999999999,
+      "LIGHT_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_PUNCH\", \"my\": 0, \"time\": 3}": {
+      "MEDIUM_PUNCH": 0.005971297688091211,
+      "HEAVY_PUNCH": -0.00038757839721254353
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_PUNCH\", \"my\": 0, \"time\": 4}": {
+      "MEDIUM_PUNCH": -0.0005549999999999999,
+      "HEAVY_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 0, \"time\": 4}": {
+      "HEAVY_PUNCH": -0.0017137772985688928,
+      "LIGHT_KICK": -0.000561794425087108
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 0, \"time\": 5}": {
+      "MEDIUM_KICK": -0.001665313512620771,
+      "HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_KICK\", \"my\": 0, \"time\": 5}": {
+      "HEAVY_KICK": -0.0018514978275278714,
+      "CROUCH_LIGHT_PUNCH": -0.00016553310104529614
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 0, \"time\": 0}": {
+      "CROUCH_LIGHT_PUNCH": -0.0015367661074335934,
+      "CROUCH_MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 0, \"time\": 0}": {
+      "CROUCH_MEDIUM_PUNCH": -0.001665313512620771
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 0, \"time\": 1}": {
+      "CROUCH_HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 0, \"time\": 1}": {
+      "CROUCH_HEAVY_KICK": -0.001665313512620771,
+      "JUMP_NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL\", \"my\": 0, \"time\": 1}": {
+      "JUMP_NEUTRAL": -0.001665313512620771,
+      "JUMP_NEUTRAL_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 0, \"time\": 1}": {
+      "JUMP_NEUTRAL_PUNCH": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 0, \"time\": 2}": {
+      "JUMP_NEUTRAL_PUNCH": -0.0015367661074335934,
+      "JUMP_FORWARD": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 0, \"time\": 2}": {
+      "JUMP_FORWARD": -0.001665313512620771,
+      "JUMP_FORWARD_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 0, \"time\": 2}": {
+      "JUMP_FORWARD_KICK": -0.0012457009687499997
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 0, \"time\": 3}": {
+      "JUMP_FORWARD_KICK": -0.0011125893749999998,
+      "JUMP_BACK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_BACK\", \"my\": 0, \"time\": 3}": {
+      "JUMP_BACK": -0.001665313512620771,
+      "DPAD_LEFT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_LEFT\", \"my\": 0, \"time\": 3}": {
+      "DPAD_LEFT": -0.0013588458234374996,
+      "DPAD_RIGHT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_RIGHT\", \"my\": 0, \"time\": 3}": {
+      "DPAD_RIGHT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_RIGHT\", \"my\": 0, \"time\": 4}": {
+      "DPAD_RIGHT": -0.0012457009687499997,
+      "DPAD_UP": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 0, \"time\": 4}": {
+      "DPAD_UP": -0.0013588458234374996,
+      "DPAD_DOWN": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_DOWN\", \"my\": 0, \"time\": 4}": {
+      "DPAD_DOWN": -0.0013588458234374996,
+      "LIGHT_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_PUNCH\", \"my\": 0, \"time\": 5}": {
+      "MEDIUM_PUNCH": -0.001665313512620771,
+      "HEAVY_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 0, \"time\": 5}": {
+      "HEAVY_PUNCH": -0.0011125893749999998
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 0, \"time\": 0}": {
+      "HEAVY_PUNCH": -0.0011125893749999998,
+      "LIGHT_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 0, \"time\": 0}": {
+      "MEDIUM_KICK": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 0, \"time\": 1}": {
+      "MEDIUM_KICK": -0.0015367661074335934,
+      "HEAVY_KICK": 0.0005272613362131606
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 0, \"time\": 1}": {
+      "CROUCH_LIGHT_PUNCH": -0.0007717499999999999
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 0, \"time\": 2}": {
+      "CROUCH_MEDIUM_PUNCH": -0.001665313512620771,
+      "CROUCH_HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 0, \"time\": 2}": {
+      "CROUCH_HEAVY_KICK": -0.0011125893749999998
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 0, \"time\": 3}": {
+      "CROUCH_HEAVY_KICK": -0.0012457009687499997,
+      "JUMP_NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL\", \"my\": 0, \"time\": 3}": {
+      "JUMP_NEUTRAL": -0.001665313512620771,
+      "JUMP_NEUTRAL_PUNCH": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 0, \"time\": 3}": {
+      "JUMP_NEUTRAL_PUNCH": -0.0014550189499218746
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 0, \"time\": 4}": {
+      "JUMP_NEUTRAL_PUNCH": -0.0007717499999999999,
+      "JUMP_FORWARD": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 0, \"time\": 4}": {
+      "JUMP_FORWARD": -0.001665313512620771,
+      "JUMP_FORWARD_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 0, \"time\": 4}": {
+      "JUMP_FORWARD_KICK": -0.001665313512620771,
+      "JUMP_BACK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_BACK\", \"my\": 0, \"time\": 5}": {
+      "JUMP_BACK": -0.001665313512620771,
+      "DPAD_LEFT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_LEFT\", \"my\": 0, \"time\": 5}": {
+      "DPAD_LEFT": -0.0013588458234374996,
+      "DPAD_RIGHT": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_RIGHT\", \"my\": 0, \"time\": 5}": {
+      "DPAD_RIGHT": -0.0013588458234374996
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_DOWN\", \"my\": 0, \"time\": 0}": {
+      "DPAD_DOWN": -0.0013588458234374996,
+      "LIGHT_PUNCH": 0.0012782227547276004
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 0, \"time\": 1}": {
+      "HEAVY_PUNCH": -0.0012457009687499997
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 0, \"time\": 2}": {
+      "MEDIUM_KICK": -0.0015367661074335934
+    },
+    "{\"enemy\": 0, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 0, \"time\": 4}": {
+      "CROUCH_HEAVY_KICK": -0.001665313512620771,
+      "JUMP_NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL\", \"my\": 0, \"time\": 4}": {
+      "JUMP_NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 0, \"time\": 5}": {
+      "JUMP_NEUTRAL_PUNCH": -0.001665313512620771,
+      "JUMP_FORWARD": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD\", \"my\": 0, \"time\": 5}": {
+      "JUMP_FORWARD": -0.0011125893749999998
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 0, \"time\": 0}": {
+      "JUMP_FORWARD_KICK": -0.001665313512620771,
+      "JUMP_BACK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"JUMP_BACK\", \"my\": 0, \"time\": 0}": {
+      "JUMP_BACK": -0.0009559874999999999
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_RIGHT\", \"my\": 0, \"time\": 1}": {
+      "DPAD_RIGHT": 0.0009752093242939765,
+      "DPAD_UP": -0.0005549999999999999
+    },
+    "{\"enemy\": 0, \"last\": \"HEAVY_PUNCH\", \"my\": 0, \"time\": 3}": {
+      "HEAVY_PUNCH": -0.0014521540856122397,
+      "LIGHT_KICK": -0.0003
+    },
+    "{\"enemy\": 0, \"last\": \"MEDIUM_KICK\", \"my\": 0, \"time\": 4}": {
+      "MEDIUM_KICK": 0.0012943109871314932,
+      "HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 8, \"last\": \"LIGHT_KICK\", \"my\": 12, \"time\": 4}": {
+      "LIGHT_KICK": 0.00135
+    },
+    "{\"enemy\": 11, \"last\": \"LIGHT_KICK\", \"my\": 15, \"time\": 4}": {
+      "LIGHT_KICK": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"LIGHT_KICK\", \"my\": 2, \"time\": 4}": {
+      "LIGHT_KICK": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"MEDIUM_KICK\", \"my\": 1, \"time\": 5}": {
+      "MEDIUM_KICK": 0.002930027825516279,
+      "HEAVY_KICK": -0.0004949477351916358
+    },
+    "{\"enemy\": 3, \"last\": \"HEAVY_KICK\", \"my\": 2, \"time\": 5}": {
+      "HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 2, \"last\": \"HEAVY_KICK\", \"my\": 2, \"time\": 5}": {
+      "HEAVY_KICK": 5.052264808362398e-06
+    },
+    "{\"enemy\": 1, \"last\": \"HEAVY_KICK\", \"my\": 1, \"time\": 5}": {
+      "HEAVY_KICK": -0.0010994354130159456,
+      "CROUCH_LIGHT_PUNCH": -0.00019181184668989564
+    },
+    "{\"enemy\": 1, \"last\": \"HEAVY_KICK\", \"my\": 1, \"time\": 0}": {
+      "HEAVY_KICK": -0.0003,
+      "CROUCH_LIGHT_PUNCH": 0.0003290940766550504
+    },
+    "{\"enemy\": 3, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 2, \"time\": 0}": {
+      "CROUCH_LIGHT_PUNCH": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 1, \"time\": 0}": {
+      "CROUCH_LIGHT_PUNCH": -0.0003578049450130652,
+      "CROUCH_MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 1, \"time\": 1}": {
+      "CROUCH_LIGHT_PUNCH": -0.0006047017730781808,
+      "CROUCH_MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 1, \"time\": 1}": {
+      "CROUCH_MEDIUM_PUNCH": -0.0014049721184007484,
+      "CROUCH_HEAVY_KICK": -0.00027543554006968687
+    },
+    "{\"enemy\": 3, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 2, \"time\": 1}": {
+      "CROUCH_MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 1, \"time\": 2}": {
+      "CROUCH_MEDIUM_PUNCH": -0.0003,
+      "CROUCH_HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 1, \"time\": 2}": {
+      "CROUCH_HEAVY_KICK": -0.0014675643644276113,
+      "JUMP_NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_NEUTRAL\", \"my\": 1, \"time\": 2}": {
+      "JUMP_NEUTRAL": -0.0006347800057425148,
+      "JUMP_NEUTRAL_PUNCH": -0.0003
+    },
+    "{\"enemy\": 3, \"last\": \"JUMP_NEUTRAL\", \"my\": 2, \"time\": 2}": {
+      "JUMP_NEUTRAL": -0.0003
+    },
+    "{\"enemy\": 2, \"last\": \"JUMP_NEUTRAL\", \"my\": 2, \"time\": 2}": {
+      "JUMP_NEUTRAL": -0.001294599303135888
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_NEUTRAL\", \"my\": 1, \"time\": 3}": {
+      "JUMP_NEUTRAL": 1.929139253048916e-05,
+      "JUMP_NEUTRAL_PUNCH": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 1, \"time\": 3}": {
+      "JUMP_NEUTRAL_PUNCH": -0.001564431280952335,
+      "JUMP_FORWARD": 0.00022406794425087177
+    },
+    "{\"enemy\": 2, \"last\": \"JUMP_FORWARD\", \"my\": 2, \"time\": 3}": {
+      "JUMP_FORWARD": -0.0005549999999999999
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_FORWARD\", \"my\": 1, \"time\": 4}": {
+      "JUMP_FORWARD": -0.0007058228582715851,
+      "JUMP_FORWARD_KICK": -0.0007771777003484319
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 1, \"time\": 4}": {
+      "JUMP_FORWARD_KICK": -0.0006617064652593103,
+      "JUMP_BACK": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 1, \"time\": 5}": {
+      "JUMP_FORWARD_KICK": -0.0003,
+      "JUMP_BACK": -0.0021202090592334485
+    },
+    "{\"enemy\": 2, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 2, \"time\": 5}": {
+      "JUMP_FORWARD_KICK": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_BACK\", \"my\": 1, \"time\": 5}": {
+      "JUMP_BACK": -0.0008156952774876149,
+      "DPAD_LEFT": -0.0006621951219512183
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_LEFT\", \"my\": 1, \"time\": 5}": {
+      "DPAD_LEFT": -0.0010016541809262137,
+      "DPAD_RIGHT": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_RIGHT\", \"my\": 1, \"time\": 0}": {
+      "DPAD_RIGHT": 0.00016934961188042508
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_RIGHT\", \"my\": 1, \"time\": 1}": {
+      "DPAD_RIGHT": -0.0003,
+      "DPAD_UP": -0.000287630662020904
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_UP\", \"my\": 1, \"time\": 1}": {
+      "DPAD_UP": 0.00011325995940323429,
+      "DPAD_DOWN": -0.0003
+    },
+    "{\"enemy\": 3, \"last\": \"DPAD_UP\", \"my\": 3, \"time\": 1}": {
+      "DPAD_UP": -0.0003
+    },
+    "{\"enemy\": 2, \"last\": \"DPAD_UP\", \"my\": 1, \"time\": 1}": {
+      "DPAD_UP": -0.0013536585365853662
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_DOWN\", \"my\": 1, \"time\": 1}": {
+      "DPAD_DOWN": -0.0009318134754435778,
+      "LIGHT_PUNCH": -0.0005549999999999999
+    },
+    "{\"enemy\": 1, \"last\": \"LIGHT_PUNCH\", \"my\": 1, \"time\": 1}": {
+      "LIGHT_PUNCH": -0.0014068044102543906,
+      "MEDIUM_PUNCH": -0.00020226480836236892
+    },
+    "{\"enemy\": 1, \"last\": \"LIGHT_PUNCH\", \"my\": 1, \"time\": 2}": {
+      "LIGHT_PUNCH": -0.0016182307637140686,
+      "MEDIUM_PUNCH": -1.0627177700347914e-05
+    },
+    "{\"enemy\": 2, \"last\": \"LIGHT_PUNCH\", \"my\": 2, \"time\": 2}": {
+      "LIGHT_PUNCH": 0.001095
+    },
+    "{\"enemy\": 1, \"last\": \"MEDIUM_PUNCH\", \"my\": 1, \"time\": 2}": {
+      "MEDIUM_PUNCH": -0.0012340820829623716,
+      "HEAVY_PUNCH": 0.00013745644599303191
+    },
+    "{\"enemy\": 1, \"last\": \"MEDIUM_PUNCH\", \"my\": 1, \"time\": 3}": {
+      "MEDIUM_PUNCH": -0.00022044425087107948,
+      "HEAVY_PUNCH": -0.0004008710801393737
+    },
+    "{\"enemy\": 1, \"last\": \"HEAVY_PUNCH\", \"my\": 1, \"time\": 3}": {
+      "HEAVY_PUNCH": -0.0018040514235469864,
+      "LIGHT_KICK": -0.0003
+    },
+    "{\"enemy\": 2, \"last\": \"HEAVY_PUNCH\", \"my\": 2, \"time\": 3}": {
+      "HEAVY_PUNCH": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"LIGHT_KICK\", \"my\": 1, \"time\": 3}": {
+      "LIGHT_KICK": -0.0011383368424232449,
+      "MEDIUM_KICK": -0.0018257839721254345
+    },
+    "{\"enemy\": 1, \"last\": \"LIGHT_KICK\", \"my\": 1, \"time\": 4}": {
+      "LIGHT_KICK": -0.0010528858347151283,
+      "MEDIUM_KICK": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"MEDIUM_KICK\", \"my\": 1, \"time\": 4}": {
+      "MEDIUM_KICK": -0.001621548811651123,
+      "HEAVY_KICK": -2.7674216027873968e-05
+    },
+    "{\"enemy\": 2, \"last\": \"MEDIUM_KICK\", \"my\": 2, \"time\": 4}": {
+      "MEDIUM_KICK": 0.00135
+    },
+    "{\"enemy\": 3, \"last\": \"MEDIUM_KICK\", \"my\": 3, \"time\": 4}": {
+      "MEDIUM_KICK": -0.0003
+    },
+    "{\"enemy\": 2, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 2, \"time\": 5}": {
+      "CROUCH_LIGHT_PUNCH": -0.0007255574912891996
+    },
+    "{\"enemy\": 1, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 1, \"time\": 5}": {
+      "CROUCH_LIGHT_PUNCH": -0.0011226737039029093,
+      "CROUCH_MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 1, \"time\": 0}": {
+      "CROUCH_MEDIUM_PUNCH": 0.0010289615318488682
+    },
+    "{\"enemy\": 1, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 1, \"time\": 1}": {
+      "CROUCH_HEAVY_KICK": -0.0012349124212807264,
+      "JUMP_NEUTRAL": -0.0007987282229965161
+    },
+    "{\"enemy\": 3, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 2, \"time\": 1}": {
+      "CROUCH_HEAVY_KICK": -0.0003
+    },
+    "{\"enemy\": 2, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 2, \"time\": 1}": {
+      "CROUCH_HEAVY_KICK": -0.0011395470383275237
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_NEUTRAL\", \"my\": 1, \"time\": 1}": {
+      "JUMP_NEUTRAL": -0.000471932938665053,
+      "JUMP_NEUTRAL_PUNCH": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 1, \"time\": 2}": {
+      "JUMP_NEUTRAL_PUNCH": -0.0005679348794952873,
+      "JUMP_FORWARD": -0.0003
+    },
+    "{\"enemy\": 3, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 2, \"time\": 2}": {
+      "JUMP_NEUTRAL_PUNCH": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_FORWARD\", \"my\": 1, \"time\": 3}": {
+      "JUMP_FORWARD": -5.8069319892790265e-05,
+      "JUMP_FORWARD_KICK": -0.0006099303135888494
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 1, \"time\": 3}": {
+      "JUMP_FORWARD_KICK": 0.0030852304418108193,
+      "JUMP_BACK": 0.00135
+    },
+    "{\"enemy\": 3, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 2, \"time\": 4}": {
+      "JUMP_FORWARD_KICK": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_BACK\", \"my\": 1, \"time\": 4}": {
+      "JUMP_BACK": 0.0018153702214940015,
+      "DPAD_LEFT": 1.550522648083529e-05
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_LEFT\", \"my\": 1, \"time\": 4}": {
+      "DPAD_LEFT": 0.006571458107508666,
+      "DPAD_RIGHT": 0.0012560975609756072
+    },
+    "{\"enemy\": 3, \"last\": \"DPAD_LEFT\", \"my\": 2, \"time\": 5}": {
+      "DPAD_LEFT": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_RIGHT\", \"my\": 1, \"time\": 5}": {
+      "DPAD_RIGHT": 9.901457533974294e-05,
+      "DPAD_UP": -0.0002545296167247378
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_UP\", \"my\": 1, \"time\": 5}": {
+      "DPAD_UP": -4.389179006968741e-06,
+      "DPAD_DOWN": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_UP\", \"my\": 1, \"time\": 0}": {
+      "DPAD_UP": 0.00135,
+      "DPAD_DOWN": -0.0003
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_DOWN\", \"my\": 1, \"time\": 0}": {
+      "DPAD_DOWN": -0.0009821906141114986
+    },
+    "{\"enemy\": 2, \"last\": \"LIGHT_PUNCH\", \"my\": 2, \"time\": 1}": {
+      "LIGHT_PUNCH": -0.0003
+    },
+    "{\"enemy\": 3, \"last\": \"LIGHT_PUNCH\", \"my\": 2, \"time\": 1}": {
+      "LIGHT_PUNCH": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"MEDIUM_PUNCH\", \"my\": 1, \"time\": 1}": {
+      "MEDIUM_PUNCH": -0.0007425621048018276
+    },
+    "{\"enemy\": 3, \"last\": \"HEAVY_PUNCH\", \"my\": 2, \"time\": 2}": {
+      "HEAVY_PUNCH": -0.0003
+    },
+    "{\"enemy\": 2, \"last\": \"HEAVY_PUNCH\", \"my\": 2, \"time\": 2}": {
+      "HEAVY_PUNCH": -0.0010141114982578413
+    },
+    "{\"enemy\": 1, \"last\": \"HEAVY_PUNCH\", \"my\": 1, \"time\": 2}": {
+      "HEAVY_PUNCH": -0.001368643665566755,
+      "LIGHT_KICK": -0.0007040069686411139
+    },
+    "{\"enemy\": 2, \"last\": \"LIGHT_KICK\", \"my\": 2, \"time\": 3}": {
+      "LIGHT_KICK": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"MEDIUM_KICK\", \"my\": 1, \"time\": 3}": {
+      "MEDIUM_KICK": -0.0012062857265119585
+    },
+    "{\"enemy\": 1, \"last\": \"HEAVY_KICK\", \"my\": 1, \"time\": 4}": {
+      "HEAVY_KICK": -0.0005482365176440662,
+      "CROUCH_LIGHT_PUNCH": -0.000390418118466898
+    },
+    "{\"enemy\": 3, \"last\": \"HEAVY_KICK\", \"my\": 2, \"time\": 4}": {
+      "HEAVY_KICK": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"CROUCH_LIGHT_PUNCH\", \"my\": 1, \"time\": 4}": {
+      "CROUCH_LIGHT_PUNCH": 0.0007148344947735197
+    },
+    "{\"enemy\": 1, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 1, \"time\": 5}": {
+      "CROUCH_MEDIUM_PUNCH": -0.001440937595359183
+    },
+    "{\"enemy\": 3, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 2, \"time\": 5}": {
+      "CROUCH_MEDIUM_PUNCH": -0.0003
+    },
+    "{\"enemy\": 2, \"last\": \"CROUCH_MEDIUM_PUNCH\", \"my\": 2, \"time\": 5}": {
+      "CROUCH_MEDIUM_PUNCH": 0.0013972125435540064
+    },
+    "{\"enemy\": 1, \"last\": \"CROUCH_HEAVY_KICK\", \"my\": 1, \"time\": 0}": {
+      "CROUCH_HEAVY_KICK": -0.0018086566623475616
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 1, \"time\": 1}": {
+      "JUMP_NEUTRAL_PUNCH": -0.0001321252820121954
+    },
+    "{\"enemy\": 3, \"last\": \"JUMP_NEUTRAL_PUNCH\", \"my\": 2, \"time\": 1}": {
+      "JUMP_NEUTRAL_PUNCH": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_FORWARD\", \"my\": 1, \"time\": 2}": {
+      "JUMP_FORWARD": -0.0015775106854198431
+    },
+    "{\"enemy\": 2, \"last\": \"JUMP_FORWARD\", \"my\": 2, \"time\": 2}": {
+      "JUMP_FORWARD_KICK": -0.0003
+    },
+    "{\"enemy\": 2, \"last\": \"JUMP_FORWARD_KICK\", \"my\": 2, \"time\": 3}": {
+      "JUMP_FORWARD_KICK": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"JUMP_BACK\", \"my\": 1, \"time\": 3}": {
+      "JUMP_BACK": 0.0112878110373881
+    },
+    "{\"enemy\": 2, \"last\": \"JUMP_BACK\", \"my\": 3, \"time\": 4}": {
+      "DPAD_LEFT": 0.00135
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_RIGHT\", \"my\": 1, \"time\": 4}": {
+      "DPAD_RIGHT": 0.0008398164501007664,
+      "DPAD_UP": 7.64808362369336e-05
+    },
+    "{\"enemy\": 1, \"last\": \"DPAD_UP\", \"my\": 1, \"time\": 4}": {
+      "DPAD_UP": 0.0015365853658536564
+    },
+    "{\"enemy\": 0, \"last\": \"DPAD_UP\", \"my\": 0, \"time\": 5}": {
+      "DPAD_UP": 0.001767135170840595
+    },
+    "{\"enemy\": 2, \"last\": \"DPAD_UP\", \"my\": 2, \"time\": 5}": {
+      "DPAD_UP": 0.00135
+    },
+    "{\"enemy\": 2, \"last\": \"DPAD_DOWN\", \"my\": 2, \"time\": 5}": {
+      "DPAD_DOWN": 0.00135
+    },
+    "{\"enemy\": 2, \"last\": \"DPAD_DOWN\", \"my\": 1, \"time\": 5}": {
+      "DPAD_DOWN": 0.000656613839497531,
+      "LIGHT_PUNCH": -0.00033740231160615336
+    }
+  }
+}

@@ -1,0 +1,20 @@
+[
+  {"action": "DPAD_LEFT", "repeat": 4},
+  {"action": "DPAD_RIGHT", "repeat": 4},
+  {"action": "DPAD_UP", "repeat": 4},
+  {"action": "DPAD_DOWN", "repeat": 4},
+  {"action": "LIGHT_PUNCH", "repeat": 6},
+  {"action": "MEDIUM_PUNCH", "repeat": 6},
+  {"action": "HEAVY_PUNCH", "repeat": 6},
+  {"action": "LIGHT_KICK", "repeat": 6},
+  {"action": "MEDIUM_KICK", "repeat": 6},
+  {"action": "HEAVY_KICK", "repeat": 6},
+  {"action": "CROUCH_LIGHT_PUNCH", "repeat": 6},
+  {"action": "CROUCH_MEDIUM_PUNCH", "repeat": 6},
+  {"action": "CROUCH_HEAVY_KICK", "repeat": 6},
+  {"action": "JUMP_NEUTRAL", "repeat": 6},
+  {"action": "JUMP_NEUTRAL_PUNCH", "repeat": 6},
+  {"action": "JUMP_FORWARD", "repeat": 6},
+  {"action": "JUMP_FORWARD_KICK", "repeat": 6},
+  {"action": "JUMP_BACK", "repeat": 6}
+]
