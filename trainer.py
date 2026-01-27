@@ -8,6 +8,7 @@ import json
 import os
 import random
 import signal
+import sys
 import time
 from collections import deque
 from datetime import datetime, timezone
@@ -65,6 +66,23 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=0.0,
         help="Create a virtual controller, pulse A once, then sleep for N seconds before exit.",
+    )
+    parser.add_argument(
+        "--p2-confirm",
+        action="store_true",
+        help="Tap A once on the virtual controller after target lock to assign P2.",
+    )
+    parser.add_argument(
+        "--p2-confirm-hold-seconds",
+        type=float,
+        default=0.08,
+        help="Seconds to hold A when --p2-confirm is set.",
+    )
+    parser.add_argument(
+        "--p2-confirm-delay-seconds",
+        type=float,
+        default=0.0,
+        help="Delay before the P2 confirm tap (post target lock).",
     )
     parser.add_argument(
         "--reward-mode",
@@ -151,15 +169,6 @@ def _capture_region_for_target(hwnd: Optional[int], capture_mode: str) -> Tuple[
     client_rect = _get_client_rect(hwnd) if hwnd and capture_mode == "window" else None
     if capture_mode == "window" and client_rect:
         left, top, right, bottom = client_rect
-        region = {
-            "left": left,
-            "top": top,
-            "width": max(0, right - left),
-            "height": max(0, bottom - top),
-        }
-        return region, {"window_rect": window_rect, "client_rect": client_rect}
-    if capture_mode == "window" and window_rect:
-        left, top, right, bottom = window_rect
         region = {
             "left": left,
             "top": top,
@@ -256,8 +265,17 @@ def _resolve_force_button(name: str | None) -> vg.XUSB_BUTTON | None:
     return getattr(vg.XUSB_BUTTON, attr, None)
 
 
+def _tap_a(gamepad: vg.VX360Gamepad, *, hold_seconds: float = 0.08) -> None:
+    gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+    gamepad.update()
+    time.sleep(max(0.0, hold_seconds))
+    gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+    gamepad.update()
+
+
 def main() -> int:
     args = parse_args()
+    print(f"PYTHON_EXE={sys.executable}")
     if args.seed is not None:
         random.seed(args.seed)
 
@@ -323,6 +341,16 @@ def main() -> int:
         raise SystemExit(f"Target lock failed for {args.target_exe}.")
     target_pid = lock.info.pid if lock.info else None
     target_hwnd = lock.info.hwnd if lock.info else None
+    if args.capture_mode == "window" and not target_hwnd:
+        raise SystemExit(
+            "WINDOW CAPTURE FAILED: no target HWND. "
+            "Ensure SF6 is running, focused, and not minimized."
+        )
+
+    if args.p2_confirm:
+        if args.p2_confirm_delay_seconds > 0:
+            time.sleep(args.p2_confirm_delay_seconds)
+        _tap_a(gamepad, hold_seconds=args.p2_confirm_hold_seconds)
 
     metadata_dir = run_root / "metadata"
     metadata_dir.mkdir(parents=True, exist_ok=True)
@@ -406,7 +434,6 @@ def main() -> int:
                 delta_gt_count = 0
                 frame_hash_prev = ""
                 same_state_streak = 0
-                last_debug = time.perf_counter()
 
                 while time.perf_counter() < episode_end:
                     if stop_requested:
@@ -416,7 +443,20 @@ def main() -> int:
                     capture_region, rect_info = _capture_region_for_target(
                         target_hwnd, args.capture_mode
                     )
-                    shot = screen.grab(capture_region or monitor)
+                    if args.capture_mode == "window":
+                        if not capture_region:
+                            raise SystemExit(
+                                "WINDOW CAPTURE FAILED: no client/window rect. "
+                                "Ensure SF6 is visible and not minimized."
+                            )
+                        if capture_region.get("width", 0) <= 0 or capture_region.get("height", 0) <= 0:
+                            raise SystemExit(
+                                "WINDOW CAPTURE FAILED: invalid client/window rect. "
+                                "Ensure SF6 is visible and not minimized."
+                            )
+                        shot = screen.grab(capture_region)
+                    else:
+                        shot = screen.grab(monitor)
                     width, height = shot.size
                     frame = shot.rgb
 
@@ -427,12 +467,9 @@ def main() -> int:
                         print(
                             f"MONITOR_SIZE={monitor.get('width')}x{monitor.get('height')}"
                         )
-                        if target_hwnd:
-                            print(f"TARGET_HWND={target_hwnd}")
-                        if rect_info.get("window_rect"):
-                            print(f"WINDOW_RECT={rect_info['window_rect']}")
-                        if rect_info.get("client_rect"):
-                            print(f"CLIENT_RECT={rect_info['client_rect']}")
+                        print(f"TARGET_HWND={target_hwnd}")
+                        print(f"WINDOW_RECT={rect_info.get('window_rect')}")
+                        print(f"CLIENT_RECT={rect_info.get('client_rect')}")
                         print(f"FRAME_SIZE={width}x{height}")
                         if tracker is not None:
                             offset_px = args.hud_y_offset_px
@@ -495,11 +532,14 @@ def main() -> int:
 
                     my_hp = 1.0
                     enemy_hp = 1.0
-                    if tracker is not None:
+                    debug_snapshot = args.debug_hud and step_idx in {0, 2, 4}
+                    image = None
+                    if tracker is not None or debug_snapshot:
                         from PIL import Image  # type: ignore
                         from PIL import ImageDraw  # type: ignore
 
                         image = Image.frombytes("RGB", (width, height), frame)
+                    if tracker is not None:
                         offset_px = args.hud_y_offset_px
                         if args.hud_y_offset_norm is not None:
                             offset_px = int(args.hud_y_offset_norm * height)
@@ -527,11 +567,8 @@ def main() -> int:
                         offset_px = args.hud_y_offset_px
                         if args.hud_y_offset_norm is not None:
                             offset_px = int(args.hud_y_offset_norm * height)
-                        if args.debug_hud:
-                            should_save = step_idx in {1, 3} or (time.perf_counter() - last_debug) >= 1.0
-                        else:
-                            should_save = False
-                        if should_save:
+                    if debug_snapshot and image is not None:
+                        if tracker is not None:
                             draw = ImageDraw.Draw(image)
                             if roi_mode == "poly" and p1_poly_norm and p2_poly_norm:
                                 p1_px = norm_poly_to_px(p1_poly_norm, width, height)
@@ -566,11 +603,12 @@ def main() -> int:
                                 p2_px = _apply_y_offset(p2_px, frame_h=height, offset_px=offset_px)
                                 draw.rectangle(p1_px, outline="red", width=2)
                                 draw.rectangle(p2_px, outline="red", width=2)
-                            hud_path = hud_debug_dir / f"hud_ep{episode_idx:03d}_step{step_idx:05d}.png"
-                            image.save(hud_path)
+                        hud_path = hud_debug_dir / f"hud_ep{episode_idx:03d}_step{step_idx:05d}.png"
+                        image.save(hud_path)
+                        if tracker is not None:
                             print(f"HUD p1={my_hp:.3f} p2={enemy_hp:.3f} step={step_idx}")
-                            print(f"WROTE_HUD_DEBUG={hud_path}")
-                            last_debug = time.perf_counter()
+                        print(f"WROTE_HUD_DEBUG={hud_path.resolve()}")
+                        last_debug = time.perf_counter()
 
                     if episode_health_start is None:
                         episode_health_start = (my_hp, enemy_hp)
