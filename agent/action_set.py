@@ -41,6 +41,7 @@ ACTIONS: List[Action] = [
     Action("JUMP_BACK", ls_x=-0.5, ls_y=0.8),
     Action("JUMP_NEUTRAL_PUNCH", ls_y=0.8, buttons=("X",), tap=True),
     Action("JUMP_FORWARD_KICK", ls_x=0.5, ls_y=0.8, buttons=("B",), tap=True),
+    Action("START_BUTTON", buttons=("START",), tap=True),
 ]
 
 _BUTTON_ALIASES = {

@@ -83,12 +83,14 @@
     },
     "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 0}": {
       "WALK_LEFT": -0.00555,
-      "NEUTRAL": -0.0077175,
+      "NEUTRAL": -0.0013603697578688232,
       "LIGHT_PUNCH": -0.003,
       "CROUCH_BLOCK": -0.003,
       "WALK_RIGHT": -0.003,
       "STAND_BLOCK": -0.003,
-      "LIGHT_KICK": -0.003
+      "LIGHT_KICK": -0.0011326302890625004,
+      "DPAD_RIGHT": -0.00027749999999999997,
+      "DPAD_LEFT": 4.558124999999998e-05
     },
     "{\"enemy\": 19, \"last\": \"WALK_LEFT\", \"my\": 19, \"time\": 0}": {
       "WALK_LEFT": -0.0012348750000000003
@@ -115,23 +117,31 @@
       "NEUTRAL": 0.0
     },
     "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 1}": {
-      "NEUTRAL": -0.0077175,
+      "NEUTRAL": -0.0011051719244984232,
       "CROUCH_BLOCK": 0.0,
       "STAND_BLOCK": 0.0,
-      "LIGHT_KICK": 0.0
+      "LIGHT_KICK": -0.00047799374999999995,
+      "DPAD_RIGHT": -0.00015,
+      "DPAD_LEFT": -0.00015,
+      "DPAD_DOWN": -0.00015
     },
     "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 2}": {
-      "NEUTRAL": -0.015367661074335938,
+      "NEUTRAL": -0.0010673303114259202,
       "WALK_LEFT": 0.0,
       "CROUCH_BLOCK": 0.0,
-      "WALK_RIGHT": 0.0
+      "WALK_RIGHT": 0.0,
+      "DPAD_LEFT": -0.00027749999999999997
     },
     "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 3}": {
       "WALK_RIGHT": 0.0,
-      "NEUTRAL": -0.019224809378309705,
+      "NEUTRAL": -0.002353211892784701,
       "STAND_BLOCK": 0.0,
       "CROUCH_BLOCK": 0.0,
-      "LIGHT_PUNCH": 0.0
+      "LIGHT_PUNCH": 0.0,
+      "LIGHT_KICK": -0.00027749999999999997,
+      "DPAD_DOWN": -0.00015,
+      "DPAD_RIGHT": -0.00015,
+      "DPAD_UP": -0.00015
     },
     "{\"enemy\": 19, \"last\": \"WALK_RIGHT\", \"my\": 19, \"time\": 3}": {
       "WALK_RIGHT": 0.0,
@@ -144,13 +154,14 @@
       "WALK_RIGHT": -0.00555
     },
     "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 4}": {
-      "NEUTRAL": -0.01534106449921875,
+      "NEUTRAL": -0.009807206235582715,
       "WALK_RIGHT": -0.003,
-      "LIGHT_KICK": -0.003,
+      "LIGHT_KICK": -0.002445,
       "CROUCH_BLOCK": -0.003,
       "WALK_LEFT": -0.00555,
       "STAND_BLOCK": -0.003,
-      "LIGHT_PUNCH": -0.003
+      "LIGHT_PUNCH": -0.003,
+      "DPAD_LEFT": -0.00015
     },
     "{\"enemy\": 19, \"last\": \"WALK_LEFT\", \"my\": 19, \"time\": 4}": {
       "WALK_LEFT": -0.00555,
@@ -170,8 +181,10 @@
       "NEUTRAL": -0.003
     },
     "{\"enemy\": 19, \"last\": \"NEUTRAL\", \"my\": 19, \"time\": 5}": {
-      "NEUTRAL": -0.00555,
-      "STAND_BLOCK": 0.0
+      "NEUTRAL": -0.0048675,
+      "STAND_BLOCK": 0.0,
+      "DPAD_DOWN": -0.00015,
+      "LIGHT_KICK": -0.00027749999999999997
     },
     "{\"enemy\": 19, \"last\": \"CROUCH_BLOCK\", \"my\": 19, \"time\": 0}": {
       "CROUCH_BLOCK": -0.00555
@@ -190,14 +203,19 @@
       "NEUTRAL": 0.0
     },
     "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 3}": {
-      "LIGHT_KICK": 0.0
+      "LIGHT_KICK": -0.00015,
+      "NEUTRAL": -0.00027749999999999997,
+      "DPAD_DOWN": -0.00015
     },
     "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 4}": {
-      "LIGHT_KICK": -0.003
+      "LIGHT_KICK": -0.0027,
+      "DPAD_RIGHT": -0.00027749999999999997,
+      "NEUTRAL": -0.00027749999999999997
     },
     "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 5}": {
       "LIGHT_KICK": -0.00555,
-      "NEUTRAL": 0.0
+      "NEUTRAL": -0.00027749999999999997,
+      "DPAD_DOWN": -0.00015
     },
     "{\"enemy\": 1, \"last\": \"NEUTRAL\", \"my\": 1, \"time\": 5}": {
       "NEUTRAL": 0.0014923556017274464,
@@ -310,7 +328,9 @@
       "CROUCH_BLOCK": -0.00555
     },
     "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 1}": {
-      "LIGHT_KICK": -0.0077175
+      "LIGHT_KICK": -0.0067098750000000006,
+      "NEUTRAL": -0.00047799374999999995,
+      "DPAD_DOWN": -0.00015
     },
     "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 2}": {
       "LIGHT_KICK": 0.0,
@@ -333,7 +353,9 @@
       "STAND_BLOCK": -0.00555
     },
     "{\"enemy\": 19, \"last\": \"LIGHT_KICK\", \"my\": 19, \"time\": 0}": {
-      "LIGHT_KICK": 0.00298875
+      "LIGHT_KICK": 0.00298875,
+      "NEUTRAL": -0.00047149842187499993,
+      "DPAD_RIGHT": -0.00015
     },
     "{\"enemy\": 2, \"last\": \"WALK_LEFT\", \"my\": 1, \"time\": 3}": {
       "WALK_LEFT": -0.00015
@@ -1927,6 +1949,92 @@
     "{\"enemy\": 2, \"last\": \"DPAD_DOWN\", \"my\": 1, \"time\": 5}": {
       "DPAD_DOWN": 0.000656613839497531,
       "LIGHT_PUNCH": -0.00033740231160615336
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_RIGHT\", \"my\": 19, \"time\": 0}": {
+      "DPAD_LEFT": 0.0013034403046875,
+      "DPAD_RIGHT": 3.574024341796874e-05,
+      "LIGHT_KICK": 0.00027589687499999995
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_LEFT\", \"my\": 19, \"time\": 0}": {
+      "NEUTRAL": 0.0013725,
+      "LIGHT_KICK": 0.00027589687499999995,
+      "DPAD_LEFT": 8.432531249999996e-05,
+      "DPAD_RIGHT": 3.574024341796874e-05
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_RIGHT\", \"my\": 19, \"time\": 1}": {
+      "NEUTRAL": -0.00015,
+      "DPAD_RIGHT": -0.00015,
+      "DPAD_DOWN": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_LEFT\", \"my\": 19, \"time\": 1}": {
+      "NEUTRAL": -0.00015,
+      "DPAD_LEFT": -0.00015,
+      "DPAD_DOWN": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_LEFT\", \"my\": 19, \"time\": 2}": {
+      "NEUTRAL": -0.00015,
+      "DPAD_LEFT": -0.00015,
+      "DPAD_RIGHT": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_RIGHT\", \"my\": 19, \"time\": 2}": {
+      "DPAD_RIGHT": -0.00015,
+      "NEUTRAL": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_DOWN\", \"my\": 19, \"time\": 3}": {
+      "DPAD_DOWN": -0.00038587499999999993,
+      "DPAD_RIGHT": -0.00015,
+      "MEDIUM_KICK": -0.00015,
+      "START_BUTTON": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_DOWN\", \"my\": 19, \"time\": 1}": {
+      "DPAD_DOWN": -0.00047799374999999995,
+      "DPAD_RIGHT": -0.00015,
+      "LIGHT_KICK": -0.00015,
+      "DPAD_LEFT": -0.00015,
+      "NEUTRAL": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_RIGHT\", \"my\": 19, \"time\": 3}": {
+      "DPAD_UP": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_UP\", \"my\": 19, \"time\": 3}": {
+      "DPAD_LEFT": -0.00015,
+      "LIGHT_KICK": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_LEFT\", \"my\": 19, \"time\": 3}": {
+      "DPAD_DOWN": -0.00015,
+      "LIGHT_KICK": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"MEDIUM_KICK\", \"my\": 19, \"time\": 3}": {
+      "DPAD_LEFT": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"START_BUTTON\", \"my\": 19, \"time\": 3}": {
+      "NEUTRAL": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_RIGHT\", \"my\": 19, \"time\": 4}": {
+      "DPAD_LEFT": -0.00027749999999999997,
+      "DPAD_RIGHT": -0.00015,
+      "LIGHT_KICK": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_LEFT\", \"my\": 19, \"time\": 4}": {
+      "LIGHT_KICK": -0.00015,
+      "NEUTRAL": -0.00015,
+      "DPAD_LEFT": -0.00027749999999999997,
+      "DPAD_RIGHT": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_DOWN\", \"my\": 19, \"time\": 5}": {
+      "DPAD_DOWN": -0.00047799374999999995,
+      "DPAD_RIGHT": -0.00015,
+      "LIGHT_KICK": -0.00015,
+      "DPAD_LEFT": -0.00015,
+      "NEUTRAL": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_RIGHT\", \"my\": 19, \"time\": 5}": {
+      "DPAD_RIGHT": -0.00015,
+      "DPAD_DOWN": -0.00015
+    },
+    "{\"enemy\": 19, \"last\": \"DPAD_LEFT\", \"my\": 19, \"time\": 5}": {
+      "DPAD_LEFT": -0.00015,
+      "DPAD_DOWN": -0.00015
     }
   }
 }

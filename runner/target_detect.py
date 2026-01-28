@@ -180,6 +180,21 @@ def lock_target(
         if sleeper:
             sleeper(poll_seconds)
 
+    if normalized_mode == "exe" and (explicit_exe_norm or explicit_path_norm):
+        background_candidate = _find_target_by_process(
+            exe_name=explicit_exe_norm,
+            exe_path=explicit_path_norm,
+        )
+        if background_candidate:
+            _log_target_event(logger, "target_background_match", background_candidate)
+            return _finalize_lock(
+                background_candidate,
+                normalized_mode,
+                lock_seconds,
+                poll_ms,
+                logger,
+            )
+
     _log_target_event(logger, "target_lock_fallback", fallback_candidate)
     return _finalize_lock(fallback_candidate, normalized_mode, lock_seconds, poll_ms, logger)
 
@@ -299,3 +314,51 @@ def _get_process_path(kernel32, pid: int) -> str:
         return ""
     finally:
         kernel32.CloseHandle(handle)
+
+
+def _find_target_by_process(
+    *, exe_name: str, exe_path: str | None
+) -> TargetInfo | None:
+    if sys.platform != "win32":
+        return None
+    if not exe_name and not exe_path:
+        return None
+
+    user32 = ctypes.windll.user32
+    kernel32 = ctypes.windll.kernel32
+    matches: list[TargetInfo] = []
+
+    EnumProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_int, ctypes.c_int)
+
+    def _enum_cb(hwnd, _lparam):  # type: ignore[override]
+        if not user32.IsWindowVisible(hwnd):
+            return True
+        pid = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        if not pid.value:
+            return True
+        path = _get_process_path(kernel32, pid.value)
+        process_name = os.path.basename(path) if path else ""
+        norm_path = _normalize_path(path)
+        base_name = (process_name or "").lower()
+        match = False
+        if exe_path and norm_path and exe_path == norm_path:
+            match = True
+        elif exe_name and base_name == exe_name:
+            match = True
+        if not match:
+            return True
+        title = _get_window_text(user32, hwnd)
+        matches.append(
+            TargetInfo(
+                hwnd=int(hwnd),
+                pid=int(pid.value),
+                exe_path=path or "",
+                process_name=process_name,
+                window_title=title,
+            )
+        )
+        return False
+
+    user32.EnumWindows(EnumProc(_enum_cb), 0)
+    return matches[0] if matches else None

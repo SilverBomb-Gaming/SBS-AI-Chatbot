@@ -1,0 +1,178 @@
+[
+  {
+    "action": "DPAD_RIGHT",
+    "repeat": 1
+  },
+  {
+    "action": "DPAD_LEFT",
+    "repeat": 1
+  },
+  {
+    "action": "LIGHT_KICK",
+    "repeat": 1
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 3
+  },
+  {
+    "action": "LIGHT_KICK",
+    "repeat": 1
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 3
+  },
+  {
+    "action": "DPAD_RIGHT",
+    "repeat": 1
+  },
+  {
+    "action": "DPAD_LEFT",
+    "repeat": 1
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 1
+  },
+  {
+    "action": "LIGHT_KICK",
+    "repeat": 1
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 3
+  },
+  {
+    "action": "DPAD_LEFT",
+    "repeat": 3
+  },
+  {
+    "action": "DPAD_RIGHT",
+    "repeat": 2
+  },
+  {
+    "action": "LIGHT_KICK",
+    "repeat": 1
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 3
+  },
+  {
+    "action": "DPAD_DOWN",
+    "repeat": 4
+  },
+  {
+    "action": "DPAD_RIGHT",
+    "repeat": 2
+  },
+  {
+    "action": "DPAD_DOWN",
+    "repeat": 1
+  },
+  {
+    "action": "LIGHT_KICK",
+    "repeat": 1
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 3
+  },
+  {
+    "action": "LIGHT_KICK",
+    "repeat": 1
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 3
+  },
+  {
+    "action": "DPAD_DOWN",
+    "repeat": 2
+  },
+  {
+    "action": "DPAD_LEFT",
+    "repeat": 2
+  },
+  {
+    "action": "DPAD_DOWN",
+    "repeat": 1
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 1
+  },
+  {
+    "action": "LIGHT_KICK",
+    "repeat": 2
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 22
+  },
+  {
+    "action": "LIGHT_KICK",
+    "repeat": 1
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 4
+  },
+  {
+    "action": "DPAD_RIGHT",
+    "repeat": 1
+  },
+  {
+    "action": "DPAD_UP",
+    "repeat": 1
+  },
+  {
+    "action": "DPAD_LEFT",
+    "repeat": 1
+  },
+  {
+    "action": "DPAD_DOWN",
+    "repeat": 1
+  },
+  {
+    "action": "MEDIUM_KICK",
+    "repeat": 1
+  },
+  {
+    "action": "DPAD_LEFT",
+    "repeat": 1
+  },
+  {
+    "action": "LIGHT_KICK",
+    "repeat": 2
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 3
+  },
+  {
+    "action": "DPAD_DOWN",
+    "repeat": 1
+  },
+  {
+    "action": "START_BUTTON",
+    "repeat": 1
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 1
+  },
+  {
+    "action": "DPAD_UP",
+    "repeat": 1
+  },
+  {
+    "action": "LIGHT_KICK",
+    "repeat": 2
+  },
+  {
+    "action": "NEUTRAL",
+    "repeat": 3
+  }
+]
