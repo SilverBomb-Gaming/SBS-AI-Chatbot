@@ -10,7 +10,7 @@
       "NEUTRAL": 0.000907558977883621,
       "WALK_LEFT": -0.0048675,
       "CROUCH_BLOCK": -0.00555,
-      "STAND_BLOCK": 0.03776338256921435,
+      "STAND_BLOCK": 0.040268663922306526,
       "LIGHT_PUNCH": -0.00555,
       "LIGHT_KICK": -0.00555,
       "DPAD_LEFT": -0.00027749999999999997,
@@ -244,7 +244,7 @@
     },
     "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 1}": {
       "NEUTRAL": 0.000824218926643966,
-      "STAND_BLOCK": 0.012616412962931544
+      "STAND_BLOCK": 0.01105558998970333
     },
     "{\"enemy\": 0, \"last\": \"NEUTRAL\", \"my\": 0, \"time\": 1}": {
       "NEUTRAL": 0.001600106749585094,
@@ -487,10 +487,10 @@
       "MEDIUM_PUNCH": -0.0003
     },
     "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 0}": {
-      "STAND_BLOCK": 0.048112983112983766
+      "STAND_BLOCK": 0.047452135739636386
     },
     "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 2}": {
-      "STAND_BLOCK": 0.013344729772480008,
+      "STAND_BLOCK": 0.013798971267171136,
       "NEUTRAL": -0.0047068031766298105,
       "LIGHT_PUNCH": -0.003027781719669331,
       "WALK_LEFT": 0.015958254538080557
@@ -500,15 +500,15 @@
       "NEUTRAL": -0.002999994066520952
     },
     "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 3}": {
-      "STAND_BLOCK": 0.008885816683378418
+      "STAND_BLOCK": 0.007785707458998084
     },
     "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 4}": {
-      "STAND_BLOCK": 0.019367123980847226,
+      "STAND_BLOCK": 0.017606046671584913,
       "NEUTRAL": -0.00300225915424223,
       "WALK_RIGHT": 0.0
     },
     "{\"enemy\": 0, \"last\": \"STAND_BLOCK\", \"my\": 0, \"time\": 5}": {
-      "STAND_BLOCK": 0.01605696348816877,
+      "STAND_BLOCK": 0.014805117773242126,
       "NEUTRAL": -0.003002034930398883,
       "WALK_LEFT": 0.0030764320779423774
     },

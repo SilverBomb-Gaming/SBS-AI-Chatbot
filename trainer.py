@@ -10,6 +10,7 @@ import random
 import signal
 import sys
 import time
+import shutil
 from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,6 +35,8 @@ from agent.action_set import ACTIONS, Action, action_names, apply_action, get_ac
 from agent.q_learner import QLearner
 from agent.reward import DEFAULT_IDLE_PENALTY, net_advantage
 from agent.state import make_state
+from core.non_regression import expected_hud_debug_paths, validate_window_capture_requirements
+from core.run_contract import ensure_training_run_contract
 from reporting.training_report import generate_report
 from runner.target_detect import lock_target
 from runner.capture import _find_window_rect  # type: ignore
@@ -54,7 +57,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-exe", default="StreetFighter6.exe")
     parser.add_argument("--target-lock-seconds", type=int, default=10)
     parser.add_argument("--target-poll-ms", type=int, default=100)
-    parser.add_argument("--capture-mode", choices=["desktop", "window"], default="desktop")
+    parser.add_argument(
+        "--capture-mode",
+        choices=["window"],
+        default="window",
+        help="Window capture is the only supported mode (flag retained for compatibility).",
+    )
     parser.add_argument("--screenshot-dir", default="")
     parser.add_argument(
         "--screenshot-interval",
@@ -138,6 +146,11 @@ def parse_args() -> argparse.Namespace:
         "--action-script",
         default="",
         help="Path to a JSON list describing a repeating action sequence for data collection.",
+    )
+    parser.add_argument(
+        "--run-id",
+        default="",
+        help="Override the timestamped training run identifier (training_runs/<run_id>).",
     )
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--idle-penalty", type=float, default=DEFAULT_IDLE_PENALTY)
@@ -396,24 +409,26 @@ def main() -> int:
 
     dpi_status = _enable_dpi_awareness()
 
-    run_ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    run_ts = args.run_id or datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     run_root = Path("training_runs") / run_ts
+    contract_paths = ensure_training_run_contract(run_root)
+    run_root = contract_paths.run_dir
     screenshot_interval: Optional[int] = args.screenshot_interval if args.screenshot_interval > 0 else None
     screenshots_dir: Optional[Path] = None
     if screenshot_interval:
         screenshots_dir = (
             Path(args.screenshot_dir)
             if args.screenshot_dir
-            else run_root / "screenshots"
+            else contract_paths.screenshots_dir
         )
-    run_root.mkdir(parents=True, exist_ok=True)
-    if screenshots_dir:
         screenshots_dir.mkdir(parents=True, exist_ok=True)
-    hud_debug_dir = run_root / "hud_debug"
-    if args.debug_hud:
-        hud_debug_dir.mkdir(parents=True, exist_ok=True)
+    hud_debug_dir = contract_paths.hud_debug_dir
+    print(f"HUD_DEBUG_DIR={hud_debug_dir.resolve()}")
+    screenshots_root = screenshots_dir or contract_paths.screenshots_dir
+    print(f"SCREENSHOTS_DIR={screenshots_root.resolve()}")
     transitions_path = run_root / "transitions.jsonl"
     summaries_path = run_root / "episode_summaries.json"
+    metrics_path = contract_paths.metrics_path
     video_recorder: VideoRecorder | None = None
     if args.record_video:
         if imageio is None:
@@ -478,19 +493,17 @@ def main() -> int:
         raise SystemExit(f"Target lock failed for {args.target_exe}.")
     target_pid = lock.info.pid if lock.info else None
     target_hwnd = lock.info.hwnd if lock.info else None
-    if args.capture_mode == "window" and not target_hwnd:
-        raise SystemExit(
-            "WINDOW CAPTURE FAILED: no target HWND. "
-            "Ensure SF6 is running, focused, and not minimized."
-        )
+    try:
+        validate_window_capture_requirements(args.capture_mode, target_hwnd)
+    except Exception as exc:
+        raise SystemExit(str(exc))
 
     if args.p2_confirm:
         if args.p2_confirm_delay_seconds > 0:
             time.sleep(args.p2_confirm_delay_seconds)
         _tap_a(gamepad, hold_seconds=args.p2_confirm_hold_seconds)
 
-    metadata_dir = run_root / "metadata"
-    metadata_dir.mkdir(parents=True, exist_ok=True)
+    metadata_dir = contract_paths.metadata_dir
     (metadata_dir / "target_process.json").write_text(
         json.dumps(
             {
@@ -536,6 +549,7 @@ def main() -> int:
     legal_actions = action_names()
     episode_summaries = []
     stop_requested = False
+    last_hud_debug_path: Path | None = None
 
     def _handle_stop(_signum=None, _frame=None) -> None:
         nonlocal stop_requested
@@ -754,6 +768,7 @@ def main() -> int:
                         if tracker is not None:
                             print(f"HUD p1={my_hp:.3f} p2={enemy_hp:.3f} step={step_idx}")
                         print(f"WROTE_HUD_DEBUG={hud_path.resolve()}")
+                        last_hud_debug_path = hud_path
                         last_debug = time.perf_counter()
 
                     if episode_health_start is None:
@@ -898,6 +913,23 @@ def main() -> int:
                     json.dumps(payload, indent=2),
                     encoding="utf-8",
                 )
+                avg_reward = sum(ep["total_reward"] for ep in episode_summaries) / max(1, len(episode_summaries))
+                avg_advantage = sum(ep["net_advantage"] for ep in episode_summaries) / max(1, len(episode_summaries))
+                metrics_payload = {
+                    "run_id": run_ts,
+                    "episodes_completed": len(episode_summaries),
+                    "average_total_reward": avg_reward,
+                    "average_net_advantage": avg_advantage,
+                    "last_episode": summary,
+                    "debug_hud_enabled": bool(args.debug_hud),
+                    "hud_debug_dir": str(hud_debug_dir.resolve()),
+                    "screenshots_dir": str(screenshots_root.resolve()),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+                metrics_path.write_text(
+                    json.dumps(metrics_payload, indent=2),
+                    encoding="utf-8",
+                )
                 learner.save(policy_path)
                 if args.tap_select_between_episodes and not stop_requested:
                     _tap_select(gamepad)
@@ -916,6 +948,14 @@ def main() -> int:
         except Exception:
             pass
 
+    if args.debug_hud:
+        expected = expected_hud_debug_paths(hud_debug_dir, episode_idx=0)
+        missing = [path for path in expected if not path.exists()]
+        if missing and last_hud_debug_path and last_hud_debug_path.exists():
+            for path in missing:
+                shutil.copy2(last_hud_debug_path, path)
+                print(f"WROTE_HUD_DEBUG_BACKFILL={path.resolve()}")
+
     report_path = (
         Path(args.report_path)
         if args.report_path
@@ -927,6 +967,11 @@ def main() -> int:
         summaries_path=summaries_path,
         output_path=report_path,
     )
+    local_report = run_root / "training_report.md"
+    try:
+        shutil.copy2(report_path, local_report)
+    except Exception:
+        pass
     print(f"RUN_DIR={run_root.resolve()}")
     print(f"WROTE_POLICY={policy_path.resolve()}")
     print(f"WROTE_REPORT={report_path.resolve()}")

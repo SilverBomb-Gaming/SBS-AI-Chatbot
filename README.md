@@ -88,6 +88,16 @@ This loop is now fully operational.
 
 ---
 
+## 🧭 Operator Console & Scripts
+
+- Launch the operator console via `python -m operator_ui.server` and open `http://localhost:8000/ui` for a FastAPI + vanilla JS panel that streams trainer logs, manages artifacts, and exposes controller tooling. Details live in [Docs/operator_ui_phase1.md](Docs/operator_ui_phase1.md).
+- Always start local trainer runs through `.\run_trainer.cmd`. The wrapper resolves `.venv\Scripts\python.exe`, echoes `PYTHON_EXE=...`, passes any extra CLI flags, and guarantees the run manifest records the correct interpreter.
+- Use `.\run_keepalive.cmd --tap-a --keep-alive-seconds 30` (or `--exit-after-tap`) to keep the virtual Xbox pad warm and confirm Player 2 ownership without touching the physical controller.
+- HUD debug captures and artifact folders are created for every run (watch for the `HUD_DEBUG_DIR=` and `SCREENSHOTS_DIR=` lines early in the trainer log). Missing frames 0/2/4 are automatically backfilled so non-regression checks never fail on short runs.
+- Human feedback stays under `human_feedback/` only. The operator console buttons wire into that contract; see [Docs/human_feedback_protocol.md](Docs/human_feedback_protocol.md) for the rules of engagement.
+
+---
+
 ## 🚀 Quickstart
 
 ### 1) Target-aware capture (human observed run)
@@ -119,8 +129,10 @@ python .\tools\agent_loop.py --duration 60 --decision-hz 12 --action-seconds 0.1
 Closed-loop trainer (observe → decide → act → reward → learn):
 
 ```
-python .\trainer.py --episodes 10 --episode-seconds 30 --decision-hz 10
+.\run_trainer.cmd --episodes 10 --episode-seconds 30 --decision-hz 10
 ```
+
+`run_trainer.cmd` logs the resolved `.venv` interpreter via `PYTHON_EXE=…` and enforces window-only capture before the trainer starts. Pair it with `.\run_keepalive.cmd --tap-a --keep-alive-seconds 30` any time you need to reassign Player 2 without launching a full run.
 
 Defaults:
 - decision_hz: 10 (not 60)
@@ -138,7 +150,7 @@ If a package has no wheel, use Python 3.12 as the stable runner environment.
 No-vision mode (runs even if Pillow/Numpy are not available):
 
 ```
-python .\trainer.py --episodes 2 --episode-seconds 15 --decision-hz 10 --no-vision
+.\run_trainer.cmd --episodes 2 --episode-seconds 15 --decision-hz 10 --no-vision
 ```
 
 Troubleshooting:
@@ -196,6 +208,14 @@ Note: health extraction depends on screenshots. If you need reward validation, a
 
 ---
 
+## 📐 HUD Polygon Helper
+
+- Normalize polygon coordinates directly from a screenshot: `python tools/hud_poly_helper.py normalize --image training_runs/<run>/screenshots/example.png --points "164,120 636,120 640,150 160,150"`.
+- Overlay the current normalized polygons (and any `--hud-y-offset-px` adjustments) onto a reference frame: `python tools/hud_poly_helper.py overlay --image frame.png --out overlay.png --p1-poly "[(0.16,0.08), ...]"`.
+- These utilities match the trainer’s ROI math, so whatever you validate here is exactly what `--hud-p?_poly` consumes at runtime.
+
+---
+
 ## 🏁 Long-Term Goal
 
 > **An AI agent that can independently play and win matches in Street Fighter 6.**
@@ -207,6 +227,7 @@ Note: health extraction depends on screenshots. If you need reward validation, a
 - No system audio recording unless explicitly enabled
 - Input injection only while a run is active
 - All runs must be deterministic and reproducible
+- Trainer enforces window-only capture and aborts instantly when the Street Fighter 6 hwnd is missing
 
 ---
 
